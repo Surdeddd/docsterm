@@ -4,6 +4,12 @@
 
 English version: [README.md](./README.md)
 
+**Живое демо:** [docsterm.vercel.app](https://docsterm.vercel.app) (добавь `?ai=mock` для офлайн AI-флоу) · **npm:** [docsterm](https://www.npmjs.com/package/docsterm)
+
+```bash
+npm install docsterm docsterm-backend-mock @xterm/xterm
+```
+
 ## Зачем
 
 - Доки CLI/SDK — статичный текст. Читатель копирует команды к себе в терминал, теряет контекст, опечатывается и бросает туториал.

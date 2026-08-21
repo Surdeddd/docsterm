@@ -4,6 +4,12 @@ An embeddable AI terminal for documentation. Drop a live console into any docs p
 
 Русская версия: [README.ru.md](./README.ru.md)
 
+**Live demo:** [docsterm.vercel.app](https://docsterm.vercel.app) (add `?ai=mock` for the offline AI flow) · **npm:** [docsterm](https://www.npmjs.com/package/docsterm)
+
+```bash
+npm install docsterm docsterm-backend-mock @xterm/xterm
+```
+
 ## Why
 
 - CLI/SDK docs are static text. Readers copy commands into their own terminal, lose context, make typos, and abandon tutorials.

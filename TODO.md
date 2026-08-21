@@ -16,9 +16,14 @@
 - [x] verify: tsc + vitest (49) + playwright e2e (7, включая живой pyodide) + скриншоты light/dark
 - [x] README.md (EN) + README.ru.md + docs/embedding.md (docusaurus/react/vanilla)
 
+## Сделано после v0.1 (2026-08-21, по «да» Максима)
+
+- [x] отдельный репо: https://github.com/Surdeddd/docsterm (public, main)
+- [x] npm publish 0.1.0: `docsterm`, `docsterm-react`, `docsterm-backend-mock`, `docsterm-backend-pyodide`, `docsterm-ai-anthropic` — unscoped (орг @docsterm через CLI не создаётся, браузер-расширение оффлайн; захочется скоуп — создать орг на npmjs.com и перепубликовать)
+- [x] демо задеплоено: https://docsterm.vercel.app (vercel, static prod; проверено headless-хромом — виджет исполняет команды)
+
 ## Дальше (за пределами v0.1)
 
-- [ ] npm publish (@docsterm scope свободен) — за Максимом
 - [ ] пошаговый режим туториала: массив шагов (текст + ожидаемая команда + валидация вывода)
 - [ ] docusaurus-плагин-пакет + vue/svelte-обёртки
 - [ ] node-бекенд, когда появится зрелая MIT-песочница (nodepod следить: https://scelar.com/blog/introducing-nodepod)
