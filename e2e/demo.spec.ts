@@ -6,6 +6,11 @@ const clickCentered = async (page: Page, selector: string) => {
   await target.click()
 }
 
+const scrollTo = async (page: Page, selector: string) => {
+  await page.locator(selector).evaluate((el) => el.scrollIntoView({ block: 'center' }))
+  await page.waitForTimeout(150)
+}
+
 const typeInTerminal = async (page: Page, slot: string, text: string) => {
   await clickCentered(page, `${slot} .xterm`)
   await page.keyboard.type(text, { delay: 15 })
@@ -84,7 +89,7 @@ test.describe('bilingual page', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'en')
     await expect(page.locator('h1')).toContainText('Documentation')
     await expect(page.locator('#why')).toContainText('Why a terminal in the docs')
-    await expect(page.locator('#packages')).toContainText('One package, eight doors')
+    await expect(page.locator('#packages')).toContainText('One package, nine doors')
     await expect(page.locator('#packages')).toContainText('docsterm/pyodide')
     await expect(page.locator('#install-code')).toHaveText('npm i docsterm @xterm/xterm')
   })
@@ -95,7 +100,7 @@ test.describe('bilingual page', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'ru')
     await expect(page.locator('h1')).toContainText('Документация')
     await expect(page.locator('#why')).toContainText('Зачем терминал в доках')
-    await expect(page.locator('#packages')).toContainText('Один пакет, восемь входов')
+    await expect(page.locator('#packages')).toContainText('Один пакет, девять входов')
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       'content',
       /живой терминал/,
@@ -116,6 +121,7 @@ test.describe('javascript terminal', () => {
   test('keeps variables between commands and awaits promises', async ({ page }) => {
     await page.goto('/')
     const slot = '#terminal-js'
+    await scrollTo(page, slot)
     await expect(page.locator(slot)).toContainText('docsterm ready')
     await typeInTerminal(page, slot, 'const users = [1, 2, 3]')
     await typeInTerminal(page, slot, 'users.map(n => n * 2)')
@@ -129,6 +135,7 @@ test.describe('javascript terminal', () => {
   test('reports thrown errors with a non-zero exit code hint', async ({ page }) => {
     await page.goto('/?ai=mock')
     const slot = '#terminal-js'
+    await scrollTo(page, slot)
     await expect(page.locator(slot)).toContainText('docsterm ready')
     await typeInTerminal(page, slot, 'notDefined()')
     await expect(page.locator(slot)).toContainText('ReferenceError')
@@ -138,6 +145,7 @@ test.describe('javascript terminal', () => {
   test('survives an infinite loop by restarting the runtime', async ({ page }) => {
     await page.goto('/')
     const slot = '#terminal-js'
+    await scrollTo(page, slot)
     await expect(page.locator(slot)).toContainText('docsterm ready')
     await typeInTerminal(page, slot, 'while (true) {}')
     await expect(page.locator(slot)).toContainText('timed out', { timeout: 20_000 })
@@ -156,6 +164,37 @@ test.describe('python terminal', () => {
     await expect(page.locator(slot)).toContainText('sum: 42')
     await typeInTerminal(page, slot, '1 / 0')
     await expect(page.locator(slot)).toContainText('ZeroDivisionError')
+  })
+})
+
+test.describe('rust terminal', () => {
+  test('runs a real Rust binary compiled to wasm32-wasip1', async ({ page }) => {
+    await page.goto('/')
+    const slot = '#terminal-rust'
+    await scrollTo(page, slot)
+    await expect(page.locator(slot)).toContainText('wasm32-wasip1')
+    await typeInTerminal(page, slot, 'greet world')
+    await expect(page.locator(slot)).toContainText('Hello, world!')
+    await expect(page.locator(slot)).toContainText('Rust compiled to WebAssembly')
+  })
+
+  test('surfaces the binary own exit code and stderr', async ({ page }) => {
+    await page.goto('/?ai=mock')
+    const slot = '#terminal-rust'
+    await scrollTo(page, slot)
+    await expect(page.locator(slot)).toContainText('wasm32-wasip1')
+    await typeInTerminal(page, slot, 'greet')
+    await expect(page.locator(slot)).toContainText('missing a name')
+    await expect(page.locator(slot)).toContainText("Type 'explain'")
+  })
+
+  test('refuses commands the module does not provide', async ({ page }) => {
+    await page.goto('/')
+    const slot = '#terminal-rust'
+    await scrollTo(page, slot)
+    await expect(page.locator(slot)).toContainText('wasm32-wasip1')
+    await typeInTerminal(page, slot, 'ls')
+    await expect(page.locator(slot)).toContainText('this terminal runs greet')
   })
 })
 

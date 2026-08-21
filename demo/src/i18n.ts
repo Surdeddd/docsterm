@@ -51,6 +51,11 @@ export interface PageStrings {
   pythonBoot: string
   pythonBooting: string
   pythonTry: string
+  rustNumber: string
+  rustTitle: string
+  rustLead: string
+  rustTry: string
+  terminalLabelRust: string
   embedNumber: string
   embedTitle: string
   embedLead: string
@@ -138,15 +143,21 @@ const en: PageStrings = {
   pythonBoot: 'start the python environment',
   pythonBooting: 'loading python...',
   pythonTry: 'try: print("sum:", 6 * 7) · import sys; sys.version · 1 / 0',
-  embedNumber: '05',
+  rustNumber: '05',
+  rustTitle: 'Rust, C, Go - anything that compiles',
+  rustLead:
+    'The binary below is a real Rust program compiled to wasm32-wasip1 and served as a 55 KB file. docsterm implements the WASI syscalls it needs - argv, stdout, stderr, exit codes - so the same trick works for C, C++, Zig, TinyGo or any language with a WebAssembly target.',
+  rustTry: 'try: greet world · greet Maxim from Rust · greet (with no arguments - it exits with code 2)',
+  terminalLabelRust: 'rust - compiled to wasm32-wasip1',
+  embedNumber: '06',
   embedTitle: 'Five minutes to embed',
   embedLead:
     'One React component, or a few lines of vanilla JS. Docusaurus, Vite and plain-HTML recipes live in the repository.',
   embedReact: 'React (Docusaurus, Next, Vite)',
   embedVanilla: 'Vanilla',
   embedDocs: 'read the embedding guide',
-  packagesNumber: '06',
-  packagesTitle: 'One package, eight doors',
+  packagesNumber: '07',
+  packagesTitle: 'One package, nine doors',
   packagesLead:
     'Install docsterm once and import only what you use. Pyodide, the Anthropic SDK and React are optional peers - skip an entry point and its dependency never lands in your bundle.',
   packages: [
@@ -155,6 +166,7 @@ const en: PageStrings = {
     { name: 'docsterm/mock', body: 'Scripted commands with zero compute - for tutorials and tests.' },
     { name: 'docsterm/javascript', body: 'A JavaScript runtime in an isolated Web Worker, with timeouts.' },
     { name: 'docsterm/pyodide', body: 'Real Python 3 in the browser, loaded on demand.' },
+    { name: 'docsterm/wasi', body: 'Rust, C, C++, Zig, Go - any binary compiled to wasm32-wasi.' },
     { name: 'docsterm/websocket', body: 'Your own server: docker, git, kubectl - anything a real shell runs.' },
     { name: 'docsterm/anthropic', body: 'Command suggestions and error explanations, BYOK.' },
     { name: 'docsterm/react', body: 'The React component wrapper.' },
@@ -236,15 +248,21 @@ const ru: PageStrings = {
   pythonBoot: 'запустить python-окружение',
   pythonBooting: 'загружаю python...',
   pythonTry: 'попробуй: print("сумма:", 6 * 7) · import sys; sys.version · 1 / 0',
-  embedNumber: '05',
+  rustNumber: '05',
+  rustTitle: 'Rust, C, Go - всё, что компилируется',
+  rustLead:
+    'Бинарник ниже - настоящая программа на Rust, собранная в wasm32-wasip1 и лежащая рядом файлом на 55 КБ. docsterm реализует нужные ей системные вызовы WASI - argv, stdout, stderr, коды возврата, - поэтому тот же приём работает для C, C++, Zig, TinyGo и любого языка с целью WebAssembly.',
+  rustTry: 'попробуй: greet world · greet Максим из Rust · greet (без аргументов - выйдет с кодом 2)',
+  terminalLabelRust: 'rust - собран в wasm32-wasip1',
+  embedNumber: '06',
   embedTitle: 'Пять минут на встраивание',
   embedLead:
     'Один React-компонент или несколько строк на чистом JS. Рецепты для Docusaurus, Vite и обычного HTML лежат в репозитории.',
   embedReact: 'React (Docusaurus, Next, Vite)',
   embedVanilla: 'Чистый JS',
   embedDocs: 'открыть гайд по встраиванию',
-  packagesNumber: '06',
-  packagesTitle: 'Один пакет, восемь входов',
+  packagesNumber: '07',
+  packagesTitle: 'Один пакет, девять входов',
   packagesLead:
     'Ставится docsterm один раз, импортируется только то, что нужно. Pyodide, Anthropic SDK и React - опциональные peer-зависимости: не импортируешь вход - его зависимость не попадает ни в бандл, ни в node_modules.',
   packages: [
@@ -253,6 +271,7 @@ const ru: PageStrings = {
     { name: 'docsterm/mock', body: 'Скриптованные команды без вычислений - для туториалов и тестов.' },
     { name: 'docsterm/javascript', body: 'Рантайм JavaScript в изолированном Web Worker, с таймаутами.' },
     { name: 'docsterm/pyodide', body: 'Настоящий Python 3 в браузере, подгружается по требованию.' },
+    { name: 'docsterm/wasi', body: 'Rust, C, C++, Zig, Go - любой бинарник, собранный в wasm32-wasi.' },
     { name: 'docsterm/websocket', body: 'Свой сервер: docker, git, kubectl - всё, что умеет настоящий шелл.' },
     { name: 'docsterm/anthropic', body: 'Подсказки команд и объяснение ошибок, ключ читателя.' },
     { name: 'docsterm/react', body: 'Обёртка-компонент для React.' },

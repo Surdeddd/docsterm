@@ -87,6 +87,7 @@ export class DocsTerminal {
     io.printPrompt()
   }
 
+
   dispose(): void {
     this.observer?.disconnect()
     this.observer = null

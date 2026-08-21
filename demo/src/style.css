@@ -810,3 +810,11 @@ html[data-theme='dark'] .terminal-frame {
     justify-content: flex-start;
   }
 }
+
+.mount-error {
+  margin: 0;
+  padding: 0.6rem 0.9rem;
+  color: var(--accent);
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+}

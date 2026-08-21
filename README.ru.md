@@ -18,7 +18,7 @@ npm install docsterm @xterm/xterm
 
 Всё выполняется на клиенте: Python через [Pyodide](https://pyodide.org), скриптованные туториалы через mock-бекенд, AI — по собственному ключу читателя (BYOK, Anthropic).
 
-## Один пакет, пять входов
+## Один пакет, девять входов
 
 Ставится `docsterm` один раз, импортируется только нужное. Pyodide, Anthropic SDK и React — **опциональные peer-зависимости**: не импортируешь вход, и его зависимость не попадает ни в бандл, ни в `node_modules`.
 
@@ -29,6 +29,7 @@ npm install docsterm @xterm/xterm
 | `docsterm/mock` | Скриптованные команды без вычислений — для туториалов и тестов |
 | `docsterm/javascript` | Рантайм JavaScript в изолированном Web Worker, с таймаутами и живым состоянием |
 | `docsterm/pyodide` | Настоящий Python 3 в браузере (Pyodide, лениво с CDN) |
+| `docsterm/wasi` | Rust, C, C++, Zig, TinyGo — любой бинарник, собранный в wasm32-wasi, прямо в браузере читателя |
 | `docsterm/websocket` | Команды выполняются на твоём сервере — docker, git, kubectl, всё что умеет настоящий шелл |
 | `docsterm/anthropic` | AI-провайдер на официальном Anthropic SDK, браузерный режим, BYOK |
 | `docsterm/openai` | AI-провайдер для **любого OpenAI-совместимого эндпоинта** — OpenAI, OpenRouter, Groq, Gemini, DeepSeek, Mistral, xAI, свой шлюз или локальные Ollama / LM Studio. Без зависимостей (чистый `fetch`) |
@@ -88,7 +89,8 @@ export const PythonTutorial = () => (
 | Базовый шелл (`ls`, `grep`, конвейеры, перенаправления) | Браузер читателя | `docsterm/shell` — ~25 встроенных команд |
 | JavaScript / TypeScript SDK | Браузер читателя | `docsterm/javascript` — Web Worker, живые переменные, `await` |
 | Библиотеку на Python | Браузер читателя | `docsterm/pyodide` — настоящий CPython на WASM, `pip install` работает |
-| Ruby, PHP, Lua, SQLite, C | Браузер читателя | `Backend` на ~20 строк вокруг `ruby.wasm`, `php-wasm`, `wasmoon`, `sql.js`, … |
+| **Rust, C, C++, Zig, TinyGo** | Браузер читателя | `docsterm/wasi` — собираешь в `wasm32-wasip1` и кладёшь `.wasm` рядом с доками |
+| Ruby, PHP, Lua, SQLite | Браузер читателя | `Backend` на ~20 строк вокруг `ruby.wasm`, `php-wasm`, `wasmoon`, `sql.js`, … |
 | **Docker, git, kubectl, ssh, npm, настоящий Linux** | **Твой сервер** | `docsterm/websocket` — один сокет до контейнера, которым ты управляешь |
 | Node.js на клиенте | — | Пока нет: зрелой MIT-песочницы не существует (WebContainers и BrowserPod коммерческие, nodepod так и не вышел) |
 
@@ -128,7 +130,7 @@ new WebSocketServer({ port: 8080 }).on('connection', (socket) => {
 
 ## Бекенды
 
-Бекенд отвечает на один вопрос: что вывела командная строка и с каким кодом завершилась. В пакете их пять, а написать шестой — строк двадцать.
+Бекенд отвечает на один вопрос: что вывела командная строка и с каким кодом завершилась. В пакете их шесть, а написать седьмой — строк двадцать.
 
 **`docsterm/shell` — настоящая оболочка в браузере.** Засеваешь дерево файлов, регистрируешь свою CLI как команду — и у читателя рабочее окружение:
 
@@ -158,6 +160,24 @@ const backend = createShellBackend({
 Встроенные: `pwd cd ls cat echo touch mkdir rm cp mv head tail wc grep sort uniq find env export which sleep true false`. Синтаксис: конвейеры, `>`/`>>`/`<`, `&&`/`||`/`;`, кавычки, подстановка `$VAR`, globs `*`/`?`.
 
 Свои команды получают `argv`, `stdin`, `cwd`, `env` и файловую систему, могут быть асинхронными и возвращают либо строку, либо `{ stdout, stderr, exitCode }`.
+
+**`docsterm/wasi` — Rust, C, C++, Zig, TinyGo.** Собираешь программу в `wasm32-wasip1`, кладёшь файл рядом с доками — docsterm реализует нужные ей вызовы WASI (argv, окружение, stdin, stdout, stderr, коды возврата), и бинарник работает у читателя без изменений:
+
+```bash
+cargo build --release --target wasm32-wasip1   # или: zig build-exe -target wasm32-wasi
+```
+
+```ts
+import { createWasiBackend } from 'docsterm/wasi'
+
+const backend = createWasiBackend({
+  url: '/greet.wasm',
+  program: 'greet',
+  env: { RUST_LOG: 'info' },
+})
+```
+
+Каждая команда получает **свежий экземпляр**, поэтому один запуск не может испортить следующий, а ловушка или ненулевой `exit` доходят до виджета кодом возврата, который AI умеет объяснять. На демо крутится ровно это: Rust-бинарник на 55 КБ, без всякого сервера.
 
 **`docsterm/javascript`** исполняет JavaScript в Web Worker: переменные живут между командами, работает `await` верхнего уровня, `console.log` перехватывается, а таймаут убивает зациклившийся код и перезапускает рантайм вместо того, чтобы повесить страницу.
 

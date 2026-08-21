@@ -1,6 +1,6 @@
 {
   "name": "docsterm",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "type": "module",
   "license": "MIT",
   "description": "Embeddable AI terminal for documentation: a live in-browser console with an AI command assistant",
@@ -20,7 +20,10 @@
     "repl",
     "sandbox",
     "websocket",
-    "javascript"
+    "javascript",
+    "wasi",
+    "wasm",
+    "rust"
   ],
   "author": "Surdeddd (https://github.com/Surdeddd)",
   "homepage": "https://docsterm.vercel.app",
@@ -50,6 +53,10 @@
     "./pyodide": {
       "types": "./dist/pyodide/index.d.ts",
       "default": "./dist/pyodide/index.js"
+    },
+    "./wasi": {
+      "types": "./dist/wasi/index.d.ts",
+      "default": "./dist/wasi/index.js"
     },
     "./websocket": {
       "types": "./dist/websocket/index.d.ts",

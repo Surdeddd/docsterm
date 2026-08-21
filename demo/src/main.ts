@@ -4,12 +4,14 @@ import {
   DocsTerminal,
   createMockAIProvider,
   type AIProvider,
+  type Backend,
   type Locale,
   type TerminalTheme,
 } from 'docsterm'
 import { createShellBackend, type ShellCommand } from 'docsterm/shell'
 import { createJavaScriptBackend } from 'docsterm/javascript'
 import { createPyodideBackend } from 'docsterm/pyodide'
+import { createWasiBackend } from 'docsterm/wasi'
 import { buildConfiguredProvider, setupAiSettings } from './ai-settings'
 import { getPageStrings, type PageStrings } from './i18n'
 
@@ -204,6 +206,23 @@ const makeAi = (): AIProvider | undefined => {
   return buildConfiguredProvider()
 }
 
+const mountTerminal = (slot: HTMLElement, backend: Backend) => {
+  void new DocsTerminal({
+    backend,
+    ai: makeAi(),
+    locale,
+    theme: terminalTheme,
+    fontFamily: TERMINAL_FONT,
+    fontSize: 13,
+  })
+    .mount(slot)
+    .catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error)
+      slot.insertAdjacentHTML('beforeend', `<pre class="mount-error">terminal failed to start: ${message}</pre>`)
+      console.error('docsterm mount failed', error)
+    })
+}
+
 const orbitCommand: ShellCommand = (ctx) => {
   const [, sub, ...rest] = ctx.argv
   switch (sub) {
@@ -271,6 +290,19 @@ if (jsSlot) {
     fontFamily: TERMINAL_FONT,
     fontSize: 13,
   }).mount(jsSlot)
+}
+
+const rustSlot = document.querySelector<HTMLElement>('#terminal-rust')
+if (rustSlot) {
+  mountTerminal(
+    rustSlot,
+    createWasiBackend({
+      url: '/greet.wasm',
+      program: 'greet',
+      prompt: 'wasm $ ',
+      banner: 'greet - rust, compiled to wasm32-wasip1 (55 KB)',
+    }),
+  )
 }
 
 const bootButton = document.querySelector<HTMLButtonElement>('#python-boot')

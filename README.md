@@ -18,7 +18,7 @@ npm install docsterm @xterm/xterm
 
 Everything runs client-side: Python via [Pyodide](https://pyodide.org), scripted tutorials via the mock backend, AI via the reader's own Anthropic API key (BYOK).
 
-## One package, five entry points
+## One package, nine entry points
 
 Install `docsterm` once and import only the parts you use. Pyodide, the Anthropic SDK and React are **optional peer dependencies** — skip an entry point and its dependency never reaches your bundle or your `node_modules`.
 
@@ -29,6 +29,7 @@ Install `docsterm` once and import only the parts you use. Pyodide, the Anthropi
 | `docsterm/mock` | Scripted commands with zero compute — for tutorials and tests |
 | `docsterm/javascript` | A JavaScript runtime in an isolated Web Worker, with timeouts and persistent state |
 | `docsterm/pyodide` | Real Python 3 in the browser (Pyodide, loaded lazily from CDN) |
+| `docsterm/wasi` | Rust, C, C++, Zig, TinyGo — any binary compiled to wasm32-wasi, running in the reader browser |
 | `docsterm/websocket` | Commands executed on your own server — docker, git, kubectl, anything a real shell runs |
 | `docsterm/anthropic` | AI provider on the official Anthropic SDK, browser mode, BYOK |
 | `docsterm/openai` | AI provider for **any OpenAI-compatible endpoint** — OpenAI, OpenRouter, Groq, Gemini, DeepSeek, Mistral, xAI, your own gateway, or a local Ollama / LM Studio model. Zero dependencies (plain `fetch`) |
@@ -88,7 +89,8 @@ A browser tab is not a Linux machine, so be honest about the line: **anything th
 | Shell basics (`ls`, `grep`, pipes, redirects) | Reader's browser | `docsterm/shell` — ~25 builtins |
 | JavaScript / TypeScript SDK | Reader's browser | `docsterm/javascript` — Web Worker, persistent variables, `await` |
 | Python library | Reader's browser | `docsterm/pyodide` — real CPython on WASM, `pip install` works |
-| Ruby, PHP, Lua, SQLite, C | Reader's browser | A ~20-line `Backend` around `ruby.wasm`, `php-wasm`, `wasmoon`, `sql.js`, … |
+| **Rust, C, C++, Zig, TinyGo** | Reader's browser | `docsterm/wasi` — compile to `wasm32-wasip1`, ship the `.wasm` next to your docs |
+| Ruby, PHP, Lua, SQLite | Reader's browser | A ~20-line `Backend` around `ruby.wasm`, `php-wasm`, `wasmoon`, `sql.js`, … |
 | **Docker, git, kubectl, ssh, npm, real Linux** | **Your server** | `docsterm/websocket` — one socket to a container you control |
 | Node.js, client-side | — | Not yet: no mature MIT browser sandbox exists (WebContainers and BrowserPod are commercial, nodepod was never published) |
 
@@ -128,7 +130,7 @@ Exit codes come back to the widget, so `explain` works on a failed `git push` ex
 
 ## Backends
 
-A backend answers one question: given a command line, what is the output and the exit code. Five ship with the package, and writing a sixth is ~20 lines.
+A backend answers one question: given a command line, what is the output and the exit code. Six ship with the package, and writing a seventh is ~20 lines.
 
 **`docsterm/shell` — a real shell, in the browser.** Seed it with a file tree, register your own CLI as a command, and readers get a working environment:
 
@@ -158,6 +160,24 @@ The reader can then run `ls`, `cd src`, `cat regions.csv | grep eu | wc -l`, `ec
 Builtins: `pwd cd ls cat echo touch mkdir rm cp mv head tail wc grep sort uniq find env export which sleep true false`. Syntax: pipes, `>`/`>>`/`<`, `&&`/`||`/`;`, quoting, `$VAR` expansion, `*`/`?` globs.
 
 Custom commands get `argv`, `stdin`, `cwd`, `env` and the filesystem, may be async, and return either a string or `{ stdout, stderr, exitCode }`.
+
+**`docsterm/wasi` — Rust, C, C++, Zig, TinyGo.** Compile your program to `wasm32-wasip1` and serve the file next to your docs; docsterm implements the WASI calls it needs — argv, environment, stdin, stdout, stderr, exit codes — so the binary runs unmodified in the reader's browser:
+
+```bash
+cargo build --release --target wasm32-wasip1   # or: zig build-exe -target wasm32-wasi
+```
+
+```ts
+import { createWasiBackend } from 'docsterm/wasi'
+
+const backend = createWasiBackend({
+  url: '/greet.wasm',
+  program: 'greet',
+  env: { RUST_LOG: 'info' },
+})
+```
+
+Every command gets a **fresh instance**, so one run cannot corrupt the next, and a trap or a non-zero `exit` reaches the widget as an exit code the AI can explain. The live demo runs exactly this: a 55 KB Rust binary, no server involved.
 
 **`docsterm/javascript`** evaluates JavaScript in a Web Worker: variables persist between commands, top-level `await` works, `console.log` is captured, and a configurable timeout terminates a runaway loop and restarts the runtime instead of freezing the page.
 
