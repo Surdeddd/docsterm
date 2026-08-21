@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createShellBackend } from '../src/shell/index.js'
 import { ShellFileSystem, normalizePath } from '../src/shell/fs.js'
 import { parse, tokenize } from '../src/shell/parse.js'
-import type { Backend } from '../src/types.js'
+import type { Backend, BackendRunResult, RunOutcome } from '../src/types.js'
 
 const files = {
   'README.md': 'docsterm\nembeddable terminal\n',
@@ -13,10 +13,16 @@ const files = {
 let shell: Backend
 
 beforeEach(() => {
-  shell = createShellBackend({ files, cwd: '/', env: { PROJECT: 'orbit' } })
+  shell = createShellBackend({ files, cwd: '/', env: { PROJECT: 'orbit' }, colors: false })
 })
 
-const run = async (line: string) => shell.run(line)
+const run = async (line: string) => plain(shell.run(line))
+const plain = async (outcome: Promise<RunOutcome>): Promise<BackendRunResult> => {
+  const result = await outcome
+  if ('onKey' in result) throw new Error('expected a plain result, got an interactive session')
+  return result
+}
+
 
 describe('normalizePath', () => {
   it('collapses dots and duplicate slashes', () => {
@@ -214,10 +220,10 @@ describe('custom commands', () => {
         },
       },
     })
-    expect((await custom.run('orbit deploy')).output).toContain('Deployed')
+    expect((await plain(custom.run('orbit deploy'))).output).toContain('Deployed')
     expect(seen[0]).toEqual(['orbit', 'deploy'])
-    expect((await custom.run('cat orbit.lock')).output).toBe('deployed')
-    const failure = await custom.run('orbit fly')
+    expect((await plain(custom.run('cat orbit.lock'))).output).toBe('deployed')
+    const failure = await plain(custom.run('orbit fly'))
     expect(failure.exitCode).toBe(2)
   })
 
@@ -227,7 +233,7 @@ describe('custom commands', () => {
         upper: async (ctx) => ({ stdout: ctx.stdin.toUpperCase() }),
       },
     })
-    expect((await custom.run('echo hello | upper')).output).toBe('HELLO')
+    expect((await plain(custom.run('echo hello | upper'))).output).toBe('HELLO')
   })
 
   it('turns a thrown error into a non-zero exit code', async () => {
@@ -238,7 +244,7 @@ describe('custom commands', () => {
         },
       },
     })
-    const result = await custom.run('boom')
+    const result = await plain(custom.run('boom'))
     expect(result.exitCode).toBe(1)
     expect(result.output).toContain('exploded')
   })

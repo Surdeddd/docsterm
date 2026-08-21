@@ -82,6 +82,91 @@ test.describe('shell terminal', () => {
   })
 })
 
+test.describe('full terminal behaviour', () => {
+  test('edits inside the line with arrows, Home and Ctrl+W', async ({ page }) => {
+    await page.goto('/')
+    const slot = '#terminal-mock'
+    await expect(page.locator(slot)).toContainText('docsterm ready')
+    await clickCentered(page, `${slot} .xterm`)
+
+    await page.keyboard.type('echo wrld', { delay: 15 })
+    await page.keyboard.press('ArrowLeft')
+    await page.keyboard.press('ArrowLeft')
+    await page.keyboard.press('ArrowLeft')
+    await page.keyboard.type('o')
+    await page.keyboard.press('Enter')
+    await expect(page.locator(slot)).toContainText('world')
+
+    await page.keyboard.type('echo keep this away', { delay: 15 })
+    await page.keyboard.press('Control+w')
+    await page.keyboard.press('Enter')
+    await expect(page.locator(slot)).toContainText('keep this')
+  })
+
+  test('keeps a line that is wider than the terminal intact', async ({ page }) => {
+    await page.goto('/')
+    const slot = '#terminal-mock'
+    await expect(page.locator(slot)).toContainText('docsterm ready')
+    await clickCentered(page, `${slot} .xterm`)
+
+    const payload = 'ab'.repeat(90)
+    await page.keyboard.type(`cho ${payload}`, { delay: 2 })
+    await page.keyboard.press('Home')
+    await page.keyboard.type('e')
+    await expect(page.locator(slot)).toContainText(`echo ${payload.slice(0, 40)}`)
+
+    const screen = (await page.locator(slot).innerText()).replace(/\s+/g, '')
+    expect(screen.split(`$echo${payload.slice(0, 20)}`).length - 1).toBe(1)
+
+    await page.keyboard.press('Enter')
+    await expect(page.locator(slot)).toContainText(payload.slice(0, 60))
+  })
+
+  test('completes commands and file names with Tab', async ({ page }) => {
+    await page.goto('/')
+    const slot = '#terminal-mock'
+    await expect(page.locator(slot)).toContainText('docsterm ready')
+    await clickCentered(page, `${slot} .xterm`)
+
+    await page.keyboard.type('cat REA', { delay: 15 })
+    await page.keyboard.press('Tab')
+    await page.keyboard.press('Enter')
+    await expect(page.locator(slot)).toContainText('demo app')
+
+    await page.keyboard.type('orb', { delay: 15 })
+    await page.keyboard.press('Tab')
+    await page.keyboard.type('status', { delay: 15 })
+    await page.keyboard.press('Enter')
+    await expect(page.locator(slot)).toContainText('region: eu-central')
+  })
+
+  test('streams a long command live and cancels it with Ctrl+C', async ({ page }) => {
+    await page.goto('/')
+    const slot = '#terminal-mock'
+    await expect(page.locator(slot)).toContainText('docsterm ready')
+    await typeInTerminal(page, slot, 'build')
+    await expect(page.locator(slot)).toContainText('[1/5] resolving manifest')
+    await expect(page.locator(slot)).not.toContainText('build complete')
+    await page.keyboard.press('Control+c')
+    await expect(page.locator(slot)).toContainText('^C')
+    await expect(page.locator(slot)).not.toContainText('build complete')
+    await typeInTerminal(page, slot, 'echo still alive')
+    await expect(page.locator(slot)).toContainText('still alive')
+  })
+
+  test('opens a real pager and returns to the prompt on q', async ({ page }) => {
+    await page.goto('/')
+    const slot = '#terminal-mock'
+    await expect(page.locator(slot)).toContainText('docsterm ready')
+    await typeInTerminal(page, slot, 'less README.md')
+    await expect(page.locator(slot)).toContainText('README.md')
+    await expect(page.locator(slot)).toContainText('q to quit')
+    await page.keyboard.press('q')
+    await typeInTerminal(page, slot, 'echo back')
+    await expect(page.locator(slot)).toContainText('back')
+  })
+})
+
 test.describe('bilingual page', () => {
   test('english is the default and drives title, headings and lang', async ({ page }) => {
     await page.goto('/')

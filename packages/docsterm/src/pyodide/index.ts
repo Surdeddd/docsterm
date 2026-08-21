@@ -1,4 +1,4 @@
-import type { Backend, BackendHost, BackendRunResult } from '../types.js'
+import type { Backend, BackendHost, BackendRunResult, SimpleBackend } from '../types.js'
 import { loadPyodide, type PyodideInterface } from 'pyodide'
 
 export const PYODIDE_VERSION = '314.0.5'
@@ -31,7 +31,7 @@ export function formatPythonError(raw: string): string {
   return kept.join('\n').trim()
 }
 
-export function createPyodideBackend(options: PyodideBackendOptions = {}): Backend {
+export function createPyodideBackend(options: PyodideBackendOptions = {}): SimpleBackend {
   let py: PyodideInterface | null = null
   let host: BackendHost | null = null
   let capture: string[] | null = null

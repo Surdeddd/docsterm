@@ -1,6 +1,6 @@
-import { FitAddon } from '@xterm/addon-fit'
-import { Terminal } from '@xterm/xterm'
+import type { Terminal } from '@xterm/xterm'
 import { LineEditor } from './line-editor.js'
+import { moveToBlockEnd, renderLine } from './line-render.js'
 import { getMessages, resolveLocale } from './messages.js'
 import { collectPageContext } from './page-context.js'
 import { SessionController, type SessionIO } from './session-controller.js'
@@ -21,6 +21,7 @@ export class DocsTerminal {
     const { backend } = this.options
     const locale = resolveLocale(this.options.locale)
     const messages = getMessages(locale)
+    const [{ Terminal }, { FitAddon }] = await Promise.all([import('@xterm/xterm'), import('@xterm/addon-fit')])
     const term = new Terminal({
       cursorBlink: true,
       fontSize: this.options.fontSize ?? 14,
@@ -34,14 +35,23 @@ export class DocsTerminal {
     this.term = term
 
     const write = (text: string) => term.write(text)
+    let block = { row: 0, rows: 0 }
+    const leaveLine = () => {
+      write(moveToBlockEnd(block.row, block.rows))
+      block = { row: 0, rows: 0 }
+    }
     const io: SessionIO = {
       write: (text) => write(normalize(text)),
       print: (line) => write(`${normalize(line)}\r\n`),
-      printPrompt: () => write(promptText()),
+      printPrompt: () => {
+        block = { row: 0, rows: 0 }
+        write(promptText())
+      },
       clearScreen: () => term.clear(),
       setBusy: (busy) => {
         this.busy = busy
       },
+      size: () => ({ columns: term.cols, rows: term.rows }),
     }
     const controller = new SessionController({
       backend,
@@ -54,19 +64,45 @@ export class DocsTerminal {
     const promptText = () => (controller.isConfirming ? '' : backend.prompt)
 
     const editor = new LineEditor({
-      onRender: (buffer) => write(`\r\x1b[2K${promptText()}${buffer}`),
+      onRender: (buffer, cursor) => {
+        const frame = renderLine({
+          prompt: promptText(),
+          buffer,
+          cursor,
+          columns: term.cols,
+          previousRow: block.row,
+        })
+        block = { row: frame.row, rows: frame.rows }
+        write(frame.text)
+      },
       onSubmit: (line) => {
+        leaveLine()
         write('\r\n')
         if (line.trim().length > 0) editor.pushHistory(line)
         void controller.submit(line)
       },
       onInterrupt: () => {
+        leaveLine()
         write(`${messages.interrupted}\r\n`)
         io.printPrompt()
       },
+      onComplete: (buffer, cursor) => controller.complete(buffer, cursor),
+      onCandidates: (candidates) => {
+        leaveLine()
+        write(`\r\n${candidates.join('  ')}\r\n`)
+      },
     })
+
     term.onData((data) => {
-      if (!this.busy) editor.handleKey(data)
+      if (controller.isInteractive) {
+        controller.handleInteractiveKey(data)
+        return
+      }
+      if (this.busy) {
+        if (data === '\x03') controller.interrupt()
+        return
+      }
+      editor.handleKey(data)
     })
 
     if (typeof ResizeObserver !== 'undefined') {
@@ -86,7 +122,6 @@ export class DocsTerminal {
     await backend.init({ write: (text) => write(normalize(text)) })
     io.printPrompt()
   }
-
 
   dispose(): void {
     this.observer?.disconnect()

@@ -9,13 +9,46 @@ export interface BackendHost {
   write(text: string): void
 }
 
+export interface RunContext {
+  write(text: string): void
+  signal: AbortSignal
+  columns: number
+  rows: number
+}
+
+export interface InteractiveRun {
+  onKey(data: string): void | Promise<void>
+  done: Promise<BackendRunResult>
+}
+
+export type RunOutcome = BackendRunResult | InteractiveRun
+
+export interface CompletionRequest {
+  line: string
+  cursor: number
+}
+
+export interface CompletionReply {
+  from: number
+  to: number
+  candidates: string[]
+}
+
 export interface Backend {
   readonly id: string
   readonly prompt: string
   init(host: BackendHost): Promise<void>
-  run(command: string): Promise<BackendRunResult>
+  run(command: string, context?: RunContext): Promise<RunOutcome>
+  complete?(request: CompletionRequest): CompletionReply | Promise<CompletionReply | null> | null
   dispose(): void
 }
+
+export interface SimpleBackend extends Backend {
+  run(command: string, context?: RunContext): Promise<BackendRunResult>
+}
+
+export const isInteractiveRun = (value: RunOutcome): value is InteractiveRun =>
+  typeof (value as InteractiveRun).onKey === 'function'
 
 export interface PageContext {
   title: string

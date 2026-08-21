@@ -8,6 +8,8 @@ export interface CommandContext {
   env: Record<string, string>
   fs: ShellFileSystem
   setCwd(path: string): void
+  write?: (text: string) => void
+  signal?: AbortSignal
 }
 
 export interface CommandResult {

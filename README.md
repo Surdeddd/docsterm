@@ -185,11 +185,62 @@ Every command gets a **fresh instance**, so one run cannot corrupt the next, and
 
 ## The terminal
 
-- Line-oriented REPL: type a command, get output, exit codes tracked.
+Not a fake prompt with an input box: xterm.js driven by a real line editor, with streaming output, cancellation and raw-key programs.
+
+| Keys | What they do |
+| --- | --- |
+| `←` `→`, `Alt+←` `Alt+→` | move by character or by word |
+| `Home` `End`, `Ctrl+A` `Ctrl+E` | jump to the start or the end of the line |
+| `Backspace`, `Delete` | delete on either side of the cursor |
+| `Ctrl+U` `Ctrl+K` `Ctrl+W` | kill to the start, to the end, or the previous word |
+| `↑` `↓` | history, up to 200 lines |
+| `Tab` | complete commands and paths: one match is inserted, a shared prefix grows the word, several matches are listed |
+| `Ctrl+C` | cancel the running command, or clear the line you are typing |
+
+- **Editing is real.** The cursor moves inside the line, and a command wider than the widget wraps and stays editable — the editor redraws the whole wrapped block, not the last row.
+- **Output streams while the command runs**, rather than appearing once it finishes.
+- **`Ctrl+C` abandons the run immediately.** The prompt returns at once, the command's `AbortSignal` fires, and whatever the abandoned command prints afterwards is discarded instead of landing on top of your next line.
+- **Interactive programs get raw keys.** The bundled shell ships `less`/`more` as an actual pager (`space`, `b`, `j`, `k`, `g`, `G`, `q`), and any backend can return one.
+- **ANSI colours**: `ls` paints directories; pass `colors: false` to the shell for plain output.
+- Widget builtins on top of the backend: `help`, `clear`, `explain`, `history`, and `#<request>` for AI.
 - `#<request>` — the AI turns the request into one command, shows it with an explanation, and asks `run it? [y/N]` before executing. Nothing runs without confirmation.
 - `explain` — streams an AI explanation of the last failed command.
-- Builtins: `help`, `clear`, `explain`. History with arrow keys, Ctrl+C cancels the line.
 - The AI sees the page context (title, description, headings) and the last few commands — a lightweight RAG with zero infrastructure.
+
+### Backends that use the full terminal
+
+`run` receives a `RunContext` and may return either a plain result or an interactive session; `complete` is optional and drives `Tab`:
+
+```ts
+import type { Backend, RunContext } from 'docsterm'
+
+const backend: Backend = {
+  id: 'demo',
+  prompt: '$ ',
+  async init() {},
+
+  async run(command: string, ctx?: RunContext) {
+    ctx?.write('working...\n')                  // streams immediately
+    if (ctx?.signal.aborted) return { output: '', exitCode: 130 }
+
+    if (command === 'watch') {
+      return {                                   // an interactive session
+        onKey: (data) => { if (data === 'q') finish({ output: '', exitCode: 0 }) },
+        done,                                    // a Promise<BackendRunResult>
+      }
+    }
+    return { output: 'done\n', exitCode: 0 }
+  },
+
+  complete({ line, cursor }) {
+    return { from: 0, to: cursor, candidates: ['watch', 'wait'] }
+  },
+
+  dispose() {},
+}
+```
+
+`ctx` also carries `columns` and `rows`, so a full-screen program knows the size it is drawing into. Backends that never stream or go interactive can keep the old one-argument `run` — the extra argument is optional and the return type widens, so existing backends keep working.
 
 ## AI providers
 
@@ -237,7 +288,7 @@ pnpm e2e         # Playwright against the built demo (incl. real Pyodide)
 - Node.js backend (blocked on a mature MIT browser sandbox; WebContainers/BrowserPod are commercial, nodepod is not published)
 - Step-by-step tutorial engine with output validation
 - Docusaurus plugin package, Vue/Svelte wrappers
-- WebSocket backend for server-side scenarios (docker/k8s)
+- Full-screen TUI support (alternate screen buffer, mouse reporting)
 - Stuck-point analytics for docs teams
 
 ## License

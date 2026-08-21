@@ -1,4 +1,4 @@
-import type { Backend, BackendHost, BackendRunResult } from '../types.js'
+import type { Backend, BackendHost, BackendRunResult, SimpleBackend } from '../types.js'
 
 export interface MockScriptEntry {
   output: string
@@ -15,7 +15,7 @@ export interface MockBackendOptions {
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-export function createMockBackend(options: MockBackendOptions): Backend {
+export function createMockBackend(options: MockBackendOptions): SimpleBackend {
   return {
     id: 'mock',
     prompt: options.prompt ?? '$ ',

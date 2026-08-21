@@ -1,4 +1,4 @@
-import type { Backend, BackendHost, BackendRunResult } from '../types.js'
+import type { Backend, BackendHost, BackendRunResult, SimpleBackend } from '../types.js'
 
 export interface WorkerLike {
   postMessage(message: unknown): void
@@ -96,7 +96,7 @@ const defaultWorkerFactory = (): WorkerLike => {
   return new Worker(URL.createObjectURL(blob)) as unknown as WorkerLike
 }
 
-export function createJavaScriptBackend(options: JavaScriptBackendOptions = {}): Backend {
+export function createJavaScriptBackend(options: JavaScriptBackendOptions = {}): SimpleBackend {
   const timeoutMs = options.timeoutMs ?? 10_000
   const factory = options.createWorker ?? defaultWorkerFactory
   let worker: WorkerLike | null = null

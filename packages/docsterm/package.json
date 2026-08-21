@@ -1,6 +1,6 @@
 {
   "name": "docsterm",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
   "license": "MIT",
   "description": "Embeddable AI terminal for documentation: a live in-browser console with an AI command assistant",

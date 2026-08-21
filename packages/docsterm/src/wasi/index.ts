@@ -1,4 +1,4 @@
-import type { Backend, BackendHost, BackendRunResult } from '../types.js'
+import type { Backend, BackendHost, BackendRunResult, SimpleBackend } from '../types.js'
 
 const WASI_ESUCCESS = 0
 const WASI_EBADF = 8
@@ -190,7 +190,7 @@ export function buildWasiResult(state: WasiHostState, thrown?: unknown): Backend
   return { output: parts.join('').replace(/\n$/, ''), exitCode: state.exitCode ?? 0 }
 }
 
-export function createWasiBackend(options: WasiBackendOptions): Backend {
+export function createWasiBackend(options: WasiBackendOptions): SimpleBackend {
   const program = options.program ?? 'main'
   let moduleBytes: BufferSource | null = options.bytes ?? null
 

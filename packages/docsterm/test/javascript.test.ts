@@ -6,6 +6,7 @@ import {
   WORKER_SOURCE,
   type WorkerLike,
 } from '../src/javascript/index.js'
+import type { BackendRunResult, RunOutcome } from '../src/types.js'
 
 class FakeWorker implements WorkerLike {
   onmessage: ((event: { data: unknown }) => void) | null = null
@@ -24,6 +25,13 @@ class FakeWorker implements WorkerLike {
   terminate(): void {
     this.terminated = true
   }
+}
+
+
+const plain = async (outcome: Promise<RunOutcome>): Promise<BackendRunResult> => {
+  const result = await outcome
+  if ('onKey' in result) throw new Error('expected a plain result, got an interactive session')
+  return result
 }
 
 describe('buildOutput', () => {
@@ -80,7 +88,7 @@ describe('createJavaScriptBackend', () => {
     const worker = new FakeWorker((message) => ({ id: message.id, logs: ['hi'], value: '3' }))
     const backend = createJavaScriptBackend({ createWorker: () => worker })
     await backend.init({ write: () => {} })
-    await expect(backend.run('1 + 2')).resolves.toEqual({ output: 'hi\n3', exitCode: 0 })
+    await expect(plain(backend.run('1 + 2'))).resolves.toEqual({ output: 'hi\n3', exitCode: 0 })
     expect(worker.received[0]).toMatchObject({ id: 1, code: '1 + 2' })
   })
 
@@ -91,7 +99,7 @@ describe('createJavaScriptBackend', () => {
       globals: { apiKeyHint: 'demo' },
     })
     await backend.init({ write: () => {} })
-    await backend.run('noop')
+    await plain(backend.run('noop'))
     expect(worker.received[0]).toMatchObject({ globals: { apiKeyHint: 'demo' } })
   })
 
@@ -101,8 +109,8 @@ describe('createJavaScriptBackend', () => {
     )
     const backend = createJavaScriptBackend({ createWorker: () => worker, timeoutMs: 50 })
     await backend.init({ write: () => {} })
-    const slow = backend.run('slow')
-    const fast = await backend.run('fast')
+    const slow = plain(backend.run('slow'))
+    const fast = await plain(backend.run('fast'))
     expect(fast.output).toBe('"fast"')
     const timedOut = await slow
     expect(timedOut.exitCode).toBe(1)
@@ -122,18 +130,18 @@ describe('createJavaScriptBackend', () => {
       },
     })
     await backend.init({ write: () => {} })
-    const first = await backend.run('while (true) {}')
+    const first = await plain(backend.run('while (true) {}'))
     expect(first.output).toContain('runtime restarted')
     expect(workers[0]?.terminated).toBe(true)
     expect(workers).toHaveLength(2)
-    await expect(backend.run('1')).resolves.toEqual({ output: '"after restart"', exitCode: 0 })
+    await expect(plain(backend.run('1'))).resolves.toEqual({ output: '"after restart"', exitCode: 0 })
   })
 
   it('surfaces a worker crash instead of hanging', async () => {
     const worker = new FakeWorker(() => null)
     const backend = createJavaScriptBackend({ createWorker: () => worker, timeoutMs: 5_000 })
     await backend.init({ write: () => {} })
-    const running = backend.run('boom()')
+    const running = plain(backend.run('boom()'))
     worker.onerror?.({})
     await expect(running).resolves.toEqual({ output: 'worker crashed', exitCode: 1 })
   })
@@ -144,7 +152,7 @@ describe('createJavaScriptBackend', () => {
       banner: 'javascript sandbox',
       createWorker: () => new FakeWorker((message) => ({ id: message.id })),
     })
-    await expect(backend.run('1')).resolves.toMatchObject({ exitCode: 1 })
+    await expect(plain(backend.run('1'))).resolves.toMatchObject({ exitCode: 1 })
     await backend.init({ write: (text) => writes.push(text) })
     expect(writes).toEqual(['javascript sandbox\n'])
   })

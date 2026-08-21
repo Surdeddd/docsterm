@@ -223,6 +223,17 @@ const mountTerminal = (slot: HTMLElement, backend: Backend) => {
     })
 }
 
+
+const buildCommand: ShellCommand = async (ctx) => {
+  const steps = ['resolving manifest', 'bundling 42 modules', 'optimising assets', 'writing sourcemaps', 'uploading']
+  for (const [index, step] of steps.entries()) {
+    if (ctx.signal?.aborted) return { stdout: '\ncancelled\n', exitCode: 130 }
+    ctx.write?.(`[${index + 1}/${steps.length}] ${step}...\n`)
+    await new Promise((resolve) => setTimeout(resolve, 700))
+  }
+  return { stdout: 'build complete in 3.5s\n' }
+}
+
 const orbitCommand: ShellCommand = (ctx) => {
   const [, sub, ...rest] = ctx.argv
   switch (sub) {
@@ -265,7 +276,7 @@ if (shellSlot) {
         },
       },
     },
-    commands: { orbit: orbitCommand },
+    commands: { orbit: orbitCommand, build: buildCommand },
   })
   void new DocsTerminal({
     backend,

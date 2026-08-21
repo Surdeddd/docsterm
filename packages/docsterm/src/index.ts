@@ -1,6 +1,7 @@
 export * from './types.js'
 export { getMessages, resolveLocale, type Messages } from './messages.js'
 export { LineEditor, type LineEditorEvents } from './line-editor.js'
+export { renderLine, moveToBlockEnd, type LineRender, type LineRenderInput } from './line-render.js'
 export {
   SessionController,
   type SessionControllerOptions,

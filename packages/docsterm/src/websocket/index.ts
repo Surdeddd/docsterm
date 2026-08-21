@@ -1,4 +1,4 @@
-import type { Backend, BackendHost, BackendRunResult } from '../types.js'
+import type { Backend, BackendHost, BackendRunResult, SimpleBackend } from '../types.js'
 
 export interface SocketLike {
   send(data: string): void
@@ -44,7 +44,7 @@ export function parseServerMessage(raw: unknown): ServerMessage | null {
 const defaultSocketFactory = (url: string, protocols?: string | string[]): SocketLike =>
   new WebSocket(url, protocols) as unknown as SocketLike
 
-export function createWebSocketBackend(options: WebSocketBackendOptions): Backend {
+export function createWebSocketBackend(options: WebSocketBackendOptions): SimpleBackend {
   const timeoutMs = options.timeoutMs ?? 120_000
   const connectTimeoutMs = options.connectTimeoutMs ?? 15_000
   const factory = options.createSocket ?? defaultSocketFactory
