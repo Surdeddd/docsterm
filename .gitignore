@@ -1,0 +1,8 @@
+node_modules/
+dist/
+MEMORY_BANK/
+test-results/
+playwright-report/
+e2e/screenshots/
+.DS_Store
+*.log

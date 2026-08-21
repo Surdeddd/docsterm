@@ -1,0 +1,46 @@
+{
+  "name": "docsterm-ai-anthropic",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.118.0",
+    "docsterm": "workspace:*"
+  },
+  "description": "Anthropic AI provider for docsterm: BYOK command suggestions and error explanations",
+  "keywords": [
+    "docsterm",
+    "documentation",
+    "terminal",
+    "ai",
+    "anthropic",
+    "claude"
+  ],
+  "author": "Surdeddd",
+  "homepage": "https://github.com/Surdeddd/docsterm#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Surdeddd/docsterm.git",
+    "directory": "packages/ai-anthropic"
+  },
+  "bugs": {
+    "url": "https://github.com/Surdeddd/docsterm/issues"
+  },
+  "sideEffects": false
+}

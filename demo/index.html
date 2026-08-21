@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Orbit is a fictional CLI for deploying tiny apps. This page demonstrates docsterm, an embeddable AI terminal for documentation." />
+    <title>Orbit CLI documentation - docsterm demo</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="brand">docsterm <span class="badge">demo</span></div>
+      <nav class="controls">
+        <label>widget language
+          <select id="locale-select">
+            <option value="en">English</option>
+            <option value="ru">Русский</option>
+          </select>
+        </label>
+        <label>theme
+          <select id="theme-select">
+            <option value="auto">auto</option>
+            <option value="light">light</option>
+            <option value="dark">dark</option>
+          </select>
+        </label>
+      </nav>
+    </header>
+
+    <main>
+      <h1>Orbit CLI documentation</h1>
+      <p class="lead">
+        Orbit is a <em>fictional</em> command-line tool for deploying tiny apps. Every terminal on
+        this page is live: commands run right here in your browser, and the AI layer can turn a
+        plain-language request into a command. This page itself is the demo of
+        <strong>docsterm</strong> - an embeddable AI terminal for docs.
+      </p>
+
+      <section id="ai-settings-section">
+        <h2>AI settings</h2>
+        <p>
+          The AI features are bring-your-own-key: add an Anthropic API key and it stays in your
+          browser's localStorage. Requests go directly from your browser to the Anthropic API.
+          Append <code>?ai=mock</code> to the URL to try the AI flow with a built-in offline mock.
+        </p>
+        <div id="ai-settings"></div>
+      </section>
+
+      <section>
+        <h2>Getting started</h2>
+        <p>
+          Initialize a project, deploy it, and check its status. Try
+          <code>orbit init</code>, then <code>orbit deploy</code>, then <code>orbit status</code>.
+          Ask the AI with <code>#deploy the app</code>. To see error handling, run
+          <code>orbit destroy</code> and then type <code>explain</code>.
+        </p>
+        <div id="terminal-mock" class="terminal-slot"></div>
+      </section>
+
+      <section>
+        <h2>Python tutorial</h2>
+        <p>
+          Orbit automation scripts are written in Python. The terminal below is a real Python
+          environment (Pyodide) running fully client-side. Boot it and try
+          <code>print(2 + 2)</code> or <code>import sys; sys.version</code>.
+        </p>
+        <button id="python-boot">Start Python environment</button>
+        <div id="terminal-python" class="terminal-slot"></div>
+      </section>
+
+      <section>
+        <h2>Embedding</h2>
+        <p>
+          One React component or a few lines of vanilla JS: see the repository's
+          <code>docs/embedding.md</code> for Docusaurus, Vite and plain-HTML recipes.
+        </p>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

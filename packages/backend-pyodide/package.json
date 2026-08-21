@@ -1,0 +1,45 @@
+{
+  "name": "docsterm-backend-pyodide",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "docsterm": "workspace:*",
+    "pyodide": "314.0.5"
+  },
+  "description": "Real Python 3 in the browser for docsterm, powered by Pyodide",
+  "keywords": [
+    "docsterm",
+    "documentation",
+    "terminal",
+    "python",
+    "pyodide"
+  ],
+  "author": "Surdeddd",
+  "homepage": "https://github.com/Surdeddd/docsterm#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Surdeddd/docsterm.git",
+    "directory": "packages/backend-pyodide"
+  },
+  "bugs": {
+    "url": "https://github.com/Surdeddd/docsterm/issues"
+  },
+  "sideEffects": false
+}
