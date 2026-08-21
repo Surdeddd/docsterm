@@ -1,5 +1,5 @@
 import type { ITheme } from '@xterm/xterm'
-import type { TerminalTheme } from './types'
+import type { TerminalTheme } from './types.js'
 
 export const lightTheme: ITheme = {
   background: '#fdfdfc',

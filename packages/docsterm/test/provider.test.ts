@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { ExplainInput, PageContext, SuggestInput } from '../src/types'
-import { createAnthropicProvider, KeyMissingError, type AnthropicLike } from '../src/anthropic/index'
+import type { ExplainInput, PageContext, SuggestInput } from '../src/types.js'
+import { createAnthropicProvider, KeyMissingError, type AnthropicLike } from '../src/anthropic/index.js'
 
 const context: PageContext = {
   title: 'Orbit docs',

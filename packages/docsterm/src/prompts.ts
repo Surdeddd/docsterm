@@ -1,4 +1,4 @@
-import type { ExplainInput, PageContext, SuggestInput } from '../types'
+import type { ExplainInput, PageContext, SuggestInput } from './types.js'
 
 const envHints: Record<string, string> = {
   pyodide:

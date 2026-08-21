@@ -28,7 +28,13 @@ export interface PageStrings {
   aiNumber: string
   aiTitle: string
   aiLead: string
+  aiProviderLabel: string
+  aiProviderCustom: string
+  aiModelLabel: string
+  aiBaseUrlLabel: string
+  aiKeyLabel: string
   aiKeyPlaceholder: string
+  aiEndpointCustom: string
   aiSave: string
   aiClear: string
   aiStatusSet: string
@@ -75,10 +81,10 @@ const en: PageStrings = {
   heroInstallLabel: 'install',
   heroCopy: 'copy',
   heroCopied: 'copied',
-  terminalLabelMock: 'orbit cli - scripted tutorial',
+  terminalLabelMock: 'shell - real files, pipes and your own CLI',
   terminalLabelPython: 'python 3 - pyodide, in your browser',
   heroTryLabel: 'try',
-  heroTryItems: ['orbit init', 'orbit deploy', '#deploy the app', 'orbit destroy', 'explain'],
+  heroTryItems: ['ls', 'cat README.md', 'orbit deploy', 'cat regions.csv | grep eu | wc -l', '#deploy the app', 'explain'],
   whyNumber: '01',
   whyTitle: 'Why a terminal in the docs',
   whyItems: [
@@ -99,14 +105,20 @@ const en: PageStrings = {
     },
   ],
   aiNumber: '02',
-  aiTitle: 'Bring your own key',
+  aiTitle: 'Any provider, your key',
   aiLead:
-    'The AI layer talks to the Anthropic API straight from the browser. The key lives in this browser localStorage and goes nowhere else. Add ?ai=mock to the URL to try the whole flow offline, with no key at all.',
-  aiKeyPlaceholder: 'sk-ant-... (Anthropic API key)',
-  aiSave: 'save key',
+    'Pick Anthropic, any OpenAI-compatible endpoint - OpenAI, OpenRouter, Groq, Gemini, DeepSeek, Mistral, xAI, your own gateway - or a model running locally in Ollama or LM Studio. The request goes straight from the browser to that endpoint; the key lives in this browser localStorage and nowhere else. Add ?ai=mock to the URL to try the whole flow offline, with no key at all.',
+  aiProviderLabel: 'provider',
+  aiProviderCustom: 'Custom endpoint',
+  aiModelLabel: 'model',
+  aiBaseUrlLabel: 'base URL',
+  aiKeyLabel: 'api key',
+  aiKeyPlaceholder: 'stored only in this browser',
+  aiEndpointCustom: 'any OpenAI-compatible /chat/completions endpoint',
+  aiSave: 'save',
   aiClear: 'clear',
-  aiStatusSet: 'key stored in this browser. Reload the page to use it.',
-  aiStatusEmpty: 'no key set - AI is off unless the page is opened with ?ai=mock.',
+  aiStatusSet: 'configured in this browser. Reload the page to use it.',
+  aiStatusEmpty: 'not configured - AI is off unless the page is opened with ?ai=mock.',
   aiMockNote: 'open the mock flow',
   pythonNumber: '03',
   pythonTitle: 'Real Python, client-side',
@@ -123,11 +135,12 @@ const en: PageStrings = {
   embedVanilla: 'Vanilla',
   embedDocs: 'read the embedding guide',
   packagesNumber: '05',
-  packagesTitle: 'One package, five doors',
+  packagesTitle: 'One package, six doors',
   packagesLead:
     'Install docsterm once and import only what you use. Pyodide, the Anthropic SDK and React are optional peers - skip an entry point and its dependency never lands in your bundle.',
   packages: [
     { name: 'docsterm', body: 'The widget: terminal UI, session logic, i18n, themes, page context.' },
+    { name: 'docsterm/shell', body: 'A real shell: virtual filesystem, pipes, redirects, your own commands.' },
     { name: 'docsterm/mock', body: 'Scripted commands with zero compute - for tutorials and tests.' },
     { name: 'docsterm/pyodide', body: 'Real Python 3 in the browser, loaded on demand.' },
     { name: 'docsterm/anthropic', body: 'Command suggestions and error explanations, BYOK.' },
@@ -158,10 +171,10 @@ const ru: PageStrings = {
   heroInstallLabel: 'установка',
   heroCopy: 'копировать',
   heroCopied: 'скопировано',
-  terminalLabelMock: 'orbit cli - скриптованный туториал',
+  terminalLabelMock: 'shell - настоящие файлы, конвейеры и своя CLI',
   terminalLabelPython: 'python 3 - pyodide, прямо в браузере',
   heroTryLabel: 'попробуй',
-  heroTryItems: ['orbit init', 'orbit deploy', '#задеплой приложение', 'orbit destroy', 'explain'],
+  heroTryItems: ['ls', 'cat README.md', 'orbit deploy', 'cat regions.csv | grep eu | wc -l', '#задеплой приложение', 'explain'],
   whyNumber: '01',
   whyTitle: 'Зачем терминал в доках',
   whyItems: [
@@ -182,14 +195,20 @@ const ru: PageStrings = {
     },
   ],
   aiNumber: '02',
-  aiTitle: 'Ключ - свой',
+  aiTitle: 'Любой провайдер, свой ключ',
   aiLead:
-    'AI-слой ходит в Anthropic API прямо из браузера. Ключ лежит в localStorage этого браузера и больше никуда не уходит. Добавь ?ai=mock к адресу - и весь сценарий можно попробовать офлайн, вообще без ключа.',
-  aiKeyPlaceholder: 'sk-ant-... (ключ Anthropic API)',
-  aiSave: 'сохранить ключ',
+    'Выбирай Anthropic, любой OpenAI-совместимый эндпоинт - OpenAI, OpenRouter, Groq, Gemini, DeepSeek, Mistral, xAI, собственный шлюз - или модель, поднятую локально в Ollama либо LM Studio. Запрос уходит из браузера прямо туда; ключ лежит в localStorage этого браузера и больше нигде. Добавь ?ai=mock к адресу - и весь сценарий можно попробовать офлайн, вообще без ключа.',
+  aiProviderLabel: 'провайдер',
+  aiProviderCustom: 'Свой эндпоинт',
+  aiModelLabel: 'модель',
+  aiBaseUrlLabel: 'базовый URL',
+  aiKeyLabel: 'api-ключ',
+  aiKeyPlaceholder: 'хранится только в этом браузере',
+  aiEndpointCustom: 'любой OpenAI-совместимый /chat/completions',
+  aiSave: 'сохранить',
   aiClear: 'очистить',
-  aiStatusSet: 'ключ сохранён в этом браузере. Перезагрузи страницу, чтобы он применился.',
-  aiStatusEmpty: 'ключа нет - AI выключен, пока страница не открыта с ?ai=mock.',
+  aiStatusSet: 'настроено в этом браузере. Перезагрузи страницу, чтобы применилось.',
+  aiStatusEmpty: 'не настроено - AI выключен, пока страница не открыта с ?ai=mock.',
   aiMockNote: 'открыть mock-режим',
   pythonNumber: '03',
   pythonTitle: 'Настоящий Python на клиенте',
@@ -206,11 +225,12 @@ const ru: PageStrings = {
   embedVanilla: 'Чистый JS',
   embedDocs: 'открыть гайд по встраиванию',
   packagesNumber: '05',
-  packagesTitle: 'Один пакет, пять входов',
+  packagesTitle: 'Один пакет, шесть входов',
   packagesLead:
     'Ставится docsterm один раз, импортируется только то, что нужно. Pyodide, Anthropic SDK и React - опциональные peer-зависимости: не импортируешь вход - его зависимость не попадает ни в бандл, ни в node_modules.',
   packages: [
     { name: 'docsterm', body: 'Виджет: интерфейс терминала, логика сессии, i18n, темы, контекст страницы.' },
+    { name: 'docsterm/shell', body: 'Настоящая оболочка: виртуальная ФС, конвейеры, перенаправления, свои команды.' },
     { name: 'docsterm/mock', body: 'Скриптованные команды без вычислений - для туториалов и тестов.' },
     { name: 'docsterm/pyodide', body: 'Настоящий Python 3 в браузере, подгружается по требованию.' },
     { name: 'docsterm/anthropic', body: 'Подсказки команд и объяснение ошибок, ключ читателя.' },

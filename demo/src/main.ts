@@ -3,15 +3,13 @@ import './style.css'
 import {
   DocsTerminal,
   createMockAIProvider,
-  keyStore,
   type AIProvider,
   type Locale,
   type TerminalTheme,
 } from 'docsterm'
-import { createMockBackend } from 'docsterm/mock'
+import { createShellBackend, type ShellCommand } from 'docsterm/shell'
 import { createPyodideBackend } from 'docsterm/pyodide'
-import { ANTHROPIC_KEY_NAME, createAnthropicProvider } from 'docsterm/anthropic'
-import { setupAiSettings } from './ai-settings'
+import { buildConfiguredProvider, setupAiSettings } from './ai-settings'
 import { getPageStrings, type PageStrings } from './i18n'
 
 const params = new URLSearchParams(location.search)
@@ -202,29 +200,52 @@ const makeAi = (): AIProvider | undefined => {
           : 'The command exited with a non-zero code. Check the arguments and try again.',
     })
   }
-  if (keyStore.get(ANTHROPIC_KEY_NAME) !== null) return createAnthropicProvider()
-  return undefined
+  return buildConfiguredProvider()
 }
 
-const mockSlot = document.querySelector<HTMLElement>('#terminal-mock')
-if (mockSlot) {
-  const backend = createMockBackend({
-    prompt: 'orbit$ ',
-    banner: 'orbit 1.4.2 - fictional deploys for tiny apps',
-    script: {
-      'orbit init': { output: 'Created orbit.toml\nProject initialized.' },
-      'orbit deploy': {
-        output: 'Uploading bundle... done\nDeployed to https://demo.orbit.app',
-        delayMs: 250,
+const orbitCommand: ShellCommand = (ctx) => {
+  const [, sub, ...rest] = ctx.argv
+  switch (sub) {
+    case 'init':
+      ctx.fs.write(ctx.fs.resolve(ctx.cwd, 'orbit.toml'), 'name = "demo"\nregion = "eu-central"\n')
+      return 'Created orbit.toml\nProject initialized.\n'
+    case 'deploy':
+      return 'Uploading bundle... done\nDeployed to https://demo.orbit.app\n'
+    case 'status':
+      return 'status: RUNNING\nregion: eu-central\nversion: 14\n'
+    case 'destroy':
+      return rest.includes('--force')
+        ? 'Deployment destroyed.\n'
+        : {
+            stderr: 'error: refusing to destroy a RUNNING deployment (use --force)\n',
+            exitCode: 1,
+          }
+    case 'help':
+    case undefined:
+      return 'commands: init, deploy, status, destroy [--force], help\n'
+    default:
+      return { stderr: `orbit: unknown command '${sub}'\n`, exitCode: 2 }
+  }
+}
+
+const shellSlot = document.querySelector<HTMLElement>('#terminal-mock')
+if (shellSlot) {
+  const backend = createShellBackend({
+    banner: 'orbit 1.4.2 - fictional deploys for tiny apps. Try: ls, cat README.md, orbit help',
+    cwd: '/project',
+    env: { PROJECT: 'orbit' },
+    prompt: (cwd) => `${cwd} $ `,
+    files: {
+      project: {
+        'README.md': '# demo app\n\nDeployed with the orbit CLI.\nRun `orbit help` to start.\n',
+        'regions.csv': 'name,region\nalpha,eu-central\nbeta,us-east\ngamma,eu-west\n',
+        src: {
+          'index.ts': "export const handler = () => 'hello from orbit'\n",
+          'config.ts': 'export const region = "eu-central"\n',
+        },
       },
-      'orbit status': { output: 'status: RUNNING\nregion: eu-central\nversion: 14' },
-      'orbit destroy': {
-        output: 'error: refusing to destroy a RUNNING deployment (use --force)',
-        exitCode: 1,
-      },
-      'orbit destroy --force': { output: 'Deployment destroyed.' },
-      'orbit help': { output: 'commands: init, deploy, status, destroy [--force], help' },
     },
+    commands: { orbit: orbitCommand },
   })
   void new DocsTerminal({
     backend,
@@ -233,7 +254,7 @@ if (mockSlot) {
     theme: terminalTheme,
     fontFamily: TERMINAL_FONT,
     fontSize: 13,
-  }).mount(mockSlot)
+  }).mount(shellSlot)
 }
 
 const bootButton = document.querySelector<HTMLButtonElement>('#python-boot')

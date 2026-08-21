@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createMockAIProvider } from '../src/mock-ai'
-import type { ExplainInput, PageContext } from '../src/types'
+import { createMockAIProvider } from '../src/mock-ai.js'
+import type { ExplainInput, PageContext } from '../src/types.js'
 
 const context: PageContext = { title: '', url: '', description: '', headings: [] }
 

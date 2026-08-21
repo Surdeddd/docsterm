@@ -1,4 +1,4 @@
-import { DocsTerminal as DocsTerminalWidget, type DocsTerminalOptions } from '../index'
+import { DocsTerminal as DocsTerminalWidget, type DocsTerminalOptions } from '../index.js'
 import { useEffect, useRef } from 'react'
 import type { CSSProperties, JSX } from 'react'
 

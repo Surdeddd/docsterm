@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatPythonError } from '../src/pyodide/index'
+import { formatPythonError } from '../src/pyodide/index.js'
 
 const raw = [
   'PythonError: Traceback (most recent call last):',

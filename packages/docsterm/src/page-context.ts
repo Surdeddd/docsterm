@@ -1,4 +1,4 @@
-import type { PageContext } from './types'
+import type { PageContext } from './types.js'
 
 const MAX_HEADINGS = 30
 

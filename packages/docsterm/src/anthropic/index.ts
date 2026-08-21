@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { keyStore } from '../key-store'
-import type { AIProvider, CommandSuggestion, ExplainInput, SuggestInput } from '../types'
-import { buildExplainSystem, buildSuggestSystem, renderExplainUser, renderSuggestUser } from './prompts'
+import { keyStore } from '../key-store.js'
+import type { AIProvider, CommandSuggestion, ExplainInput, SuggestInput } from '../types.js'
+import { buildExplainSystem, buildSuggestSystem, renderExplainUser, renderSuggestUser } from '../prompts.js'
 
 export const ANTHROPIC_KEY_NAME = 'docsterm:anthropic-key'
 export const DEFAULT_MODEL = 'claude-opus-5'

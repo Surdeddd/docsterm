@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
-import { collectPageContext } from '../src/page-context'
+import { collectPageContext } from '../src/page-context.js'
 
 describe('collectPageContext', () => {
   it('reads title, description and headings from the document', () => {

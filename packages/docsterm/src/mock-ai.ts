@@ -1,4 +1,4 @@
-import type { AIProvider, CommandSuggestion, ExplainInput, SuggestInput } from './types'
+import type { AIProvider, CommandSuggestion, ExplainInput, SuggestInput } from './types.js'
 
 export interface MockAIOptions {
   suggestions?: Record<string, CommandSuggestion>

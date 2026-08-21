@@ -1,12 +1,12 @@
 import { FitAddon } from '@xterm/addon-fit'
 import { Terminal } from '@xterm/xterm'
-import { LineEditor } from './line-editor'
-import { getMessages, resolveLocale } from './messages'
-import { collectPageContext } from './page-context'
-import { SessionController, type SessionIO } from './session-controller'
-import { normalizeOutput as normalize } from './text'
-import { resolveTheme } from './theme'
-import type { DocsTerminalOptions } from './types'
+import { LineEditor } from './line-editor.js'
+import { getMessages, resolveLocale } from './messages.js'
+import { collectPageContext } from './page-context.js'
+import { SessionController, type SessionIO } from './session-controller.js'
+import { normalizeOutput as normalize } from './text.js'
+import { resolveTheme } from './theme.js'
+import type { DocsTerminalOptions } from './types.js'
 
 export class DocsTerminal {
   private term: Terminal | null = null

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { LineEditor } from '../src/line-editor'
+import { LineEditor } from '../src/line-editor.js'
 
 let renders: string[]
 let submits: string[]

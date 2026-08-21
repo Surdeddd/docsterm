@@ -1,5 +1,5 @@
-import type { Messages } from './messages'
-import type { AIProvider, Backend, HistoryEntry, PageContext } from './types'
+import type { Messages } from './messages.js'
+import type { AIProvider, Backend, HistoryEntry, PageContext } from './types.js'
 
 export interface SessionIO {
   write(text: string): void

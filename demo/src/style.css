@@ -479,30 +479,59 @@ html[data-theme='dark'] .terminal-frame {
 
 #ai-settings {
   display: flex;
-  gap: 0.6rem;
-  align-items: center;
+  gap: 0.7rem;
+  align-items: flex-end;
   flex-wrap: wrap;
   width: 100%;
-  max-width: 720px;
-  padding: 0.9rem;
+  max-width: 780px;
+  padding: 1rem;
   border: 1px solid var(--rule);
   background: var(--paper-raised);
 }
 
-#ai-settings input {
-  flex: 1 1 260px;
+#ai-settings .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1 1 190px;
   min-width: 0;
-  padding: 0.5rem 0.65rem;
+}
+
+#ai-settings .field[hidden] {
+  display: none;
+}
+
+#ai-settings .field > span {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+#ai-settings input,
+#ai-settings select {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
   border: 1px solid var(--rule);
   background: var(--paper);
   color: var(--ink);
   font: inherit;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
 }
 
-#ai-settings input:focus-visible {
+#ai-settings input:focus-visible,
+#ai-settings select:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+
+#ai-endpoint {
+  width: 100%;
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+  padding-top: 0.2rem;
+  border-top: 1px solid var(--rule-soft);
+  margin-top: 0.3rem;
 }
 
 #ai-settings button {

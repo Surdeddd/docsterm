@@ -25,9 +25,11 @@ Install `docsterm` once and import only the parts you use. Pyodide, the Anthropi
 | Import | What it is |
 |---|---|
 | `docsterm` | The widget: xterm.js UI, line editor, session logic, i18n (en/ru), themes, page-context collector, mock AI provider |
+| `docsterm/shell` | A real shell: virtual filesystem, pipes, redirects, `&&`/`\|\|`, globs, env vars, ~25 builtins, and your own CLI as a command |
 | `docsterm/mock` | Scripted commands with zero compute — for tutorials and tests |
 | `docsterm/pyodide` | Real Python 3 in the browser (Pyodide, loaded lazily from CDN) |
 | `docsterm/anthropic` | AI provider on the official Anthropic SDK, browser mode, BYOK |
+| `docsterm/openai` | AI provider for **any OpenAI-compatible endpoint** — OpenAI, OpenRouter, Groq, Gemini, DeepSeek, Mistral, xAI, your own gateway, or a local Ollama / LM Studio model. Zero dependencies (plain `fetch`) |
 | `docsterm/react` | `<DocsTerminal>` React component |
 
 ## Quick start
@@ -74,6 +76,41 @@ export const PythonTutorial = () => (
 
 Docusaurus, Vite and plain-HTML recipes: [docs/embedding.md](./docs/embedding.md).
 
+## Backends
+
+A backend answers one question: given a command line, what is the output and the exit code. Three ship with the package, and writing a fourth is ~20 lines.
+
+**`docsterm/shell` — a real shell, in the browser.** Seed it with a file tree, register your own CLI as a command, and readers get a working environment:
+
+```ts
+import { createShellBackend } from 'docsterm/shell'
+
+const backend = createShellBackend({
+  cwd: '/project',
+  files: {
+    project: {
+      'README.md': '# demo app\n',
+      'regions.csv': 'name,region\nalpha,eu\nbeta,us\n',
+      src: { 'index.ts': 'export const answer = 42\n' },
+    },
+  },
+  commands: {
+    orbit: (ctx) => {
+      if (ctx.argv[1] === 'deploy') return 'Deployed to https://demo.orbit.app\n'
+      return { stderr: `orbit: unknown command\n`, exitCode: 2 }
+    },
+  },
+})
+```
+
+The reader can then run `ls`, `cd src`, `cat regions.csv | grep eu | wc -l`, `echo hi > notes.txt && cat notes.txt`, `find / -name *.ts`, `orbit deploy` — with real exit codes feeding the AI's `explain`.
+
+Builtins: `pwd cd ls cat echo touch mkdir rm cp mv head tail wc grep sort uniq find env export which sleep true false`. Syntax: pipes, `>`/`>>`/`<`, `&&`/`||`/`;`, quoting, `$VAR` expansion, `*`/`?` globs.
+
+Custom commands get `argv`, `stdin`, `cwd`, `env` and the filesystem, may be async, and return either a string or `{ stdout, stderr, exitCode }`.
+
+**`docsterm/pyodide`** runs real CPython. **`docsterm/mock`** replays a fixed script. Anything else — a WebSocket to your own container, another WASM runtime — is a `Backend` implementation: `init`, `run`, `dispose`.
+
 ## The terminal
 
 - Line-oriented REPL: type a command, get output, exit codes tracked.
@@ -82,9 +119,31 @@ Docusaurus, Vite and plain-HTML recipes: [docs/embedding.md](./docs/embedding.md
 - Builtins: `help`, `clear`, `explain`. History with arrow keys, Ctrl+C cancels the line.
 - The AI sees the page context (title, description, headings) and the last few commands — a lightweight RAG with zero infrastructure.
 
-## AI and keys
+## AI providers
 
-`docsterm/anthropic` calls the Anthropic API directly from the browser (official SDK, `dangerouslyAllowBrowser`). The key is bring-your-own: stored in `localStorage` under `docsterm:anthropic-key`, never sent anywhere except `api.anthropic.com`. Suggestions use structured outputs (guaranteed JSON), explanations stream. Default model: `claude-opus-5` (configurable).
+The `AIProvider` interface is provider-agnostic — two sentences (`suggestCommand`, `explainError`) — and three implementations ship with the package:
+
+```ts
+// Anthropic, via the official SDK
+import { createAnthropicProvider } from 'docsterm/anthropic'
+const ai = createAnthropicProvider({ model: 'claude-opus-5' })
+
+// Any OpenAI-compatible endpoint, via a preset
+import { createOpenAIProvider } from 'docsterm/openai'
+const ai = createOpenAIProvider({ preset: 'openrouter', model: 'openai/gpt-4.1-mini' })
+
+// A model running on the reader's own machine - no key at all
+const ai = createOpenAIProvider({ preset: 'ollama', model: 'llama3.1' })
+
+// Your own gateway, or anything else that speaks /chat/completions
+const ai = createOpenAIProvider({ baseURL: 'https://gateway.acme.dev/v1', model: 'internal-fast' })
+```
+
+Presets: `openai`, `openrouter`, `groq`, `gemini`, `deepseek`, `mistral`, `together`, `xai`, `ollama`, `lmstudio`. The OpenAI provider has **no dependencies** — it is plain `fetch` plus SSE parsing — so nothing extra reaches your bundle.
+
+Writing your own takes two methods; implement `AIProvider` and pass it as `ai`.
+
+Keys are bring-your-own: they live in the reader's `localStorage` and go only to the endpoint you configured. Suggestions ask for structured JSON (schema mode where supported, tolerant parsing everywhere else), explanations stream token by token.
 
 For docs without AI, skip the `ai` option — the terminal works as a plain interactive tutorial. For offline demos and tests use `createMockAIProvider` from `docsterm`.
 

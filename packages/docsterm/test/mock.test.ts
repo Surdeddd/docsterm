@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createMockBackend } from '../src/mock/index'
+import { createMockBackend } from '../src/mock/index.js'
 
 describe('createMockBackend', () => {
   it('returns the scripted entry for a known command', async () => {

@@ -12,8 +12,8 @@ const typeInTerminal = async (page: Page, slot: string, text: string) => {
   await page.keyboard.press('Enter')
 }
 
-test.describe('mock terminal', () => {
-  test('runs scripted commands and hints about explain on failure', async ({ page }) => {
+test.describe('shell terminal', () => {
+  test('runs a custom cli command and hints about explain on failure', async ({ page }) => {
     await page.goto('/?ai=mock')
     const slot = '#terminal-mock'
     await expect(page.locator(slot)).toContainText('docsterm ready')
@@ -28,8 +28,22 @@ test.describe('mock terminal', () => {
     await page.goto('/?ai=mock')
     const slot = '#terminal-mock'
     await expect(page.locator(slot)).toContainText('docsterm ready')
-    await typeInTerminal(page, slot, 'orbit teleport')
-    await expect(page.locator(slot)).toContainText('command not found: orbit teleport')
+    await typeInTerminal(page, slot, 'teleport now')
+    await expect(page.locator(slot)).toContainText('teleport: command not found')
+  })
+
+  test('is a real shell: files, pipes and a changing prompt', async ({ page }) => {
+    await page.goto('/')
+    const slot = '#terminal-mock'
+    await expect(page.locator(slot)).toContainText('docsterm ready')
+    await typeInTerminal(page, slot, 'ls')
+    await expect(page.locator(slot)).toContainText('README.md')
+    await typeInTerminal(page, slot, 'cat regions.csv | grep eu | wc -l')
+    await expect(page.locator(slot)).toContainText('2')
+    await typeInTerminal(page, slot, 'echo hi > note.txt && cat note.txt')
+    await expect(page.locator(slot)).toContainText('hi')
+    await typeInTerminal(page, slot, 'cd src')
+    await expect(page.locator(slot)).toContainText('/project/src $')
   })
 
   test('ai flow: suggest, confirm with y, run, then explain an error', async ({ page }) => {
@@ -70,7 +84,7 @@ test.describe('bilingual page', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'en')
     await expect(page.locator('h1')).toContainText('Documentation')
     await expect(page.locator('#why')).toContainText('Why a terminal in the docs')
-    await expect(page.locator('#packages')).toContainText('One package, five doors')
+    await expect(page.locator('#packages')).toContainText('One package, six doors')
     await expect(page.locator('#packages')).toContainText('docsterm/pyodide')
     await expect(page.locator('#install-code')).toHaveText('npm i docsterm @xterm/xterm')
   })
@@ -81,7 +95,7 @@ test.describe('bilingual page', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'ru')
     await expect(page.locator('h1')).toContainText('Документация')
     await expect(page.locator('#why')).toContainText('Зачем терминал в доках')
-    await expect(page.locator('#packages')).toContainText('Один пакет, пять входов')
+    await expect(page.locator('#packages')).toContainText('Один пакет, шесть входов')
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       'content',
       /живой терминал/,
@@ -108,6 +122,38 @@ test.describe('python terminal', () => {
     await expect(page.locator(slot)).toContainText('sum: 42')
     await typeInTerminal(page, slot, '1 / 0')
     await expect(page.locator(slot)).toContainText('ZeroDivisionError')
+  })
+})
+
+test.describe('ai providers', () => {
+  test('offers hosted, local and custom endpoints', async ({ page }) => {
+    await page.goto('/')
+    const select = page.locator('#ai-provider')
+    const values = await select.locator('option').evaluateAll((nodes) =>
+      nodes.map((node) => (node as HTMLOptionElement).value),
+    )
+    expect(values).toContain('anthropic')
+    expect(values).toContain('openai')
+    expect(values).toContain('openrouter')
+    expect(values).toContain('ollama')
+    expect(values).toContain('custom')
+  })
+
+  test('switching provider updates the model default and endpoint hint', async ({ page }) => {
+    await page.goto('/')
+    await page.locator('#ai-provider').selectOption('groq')
+    await expect(page.locator('#ai-model')).toHaveValue('llama-3.3-70b-versatile')
+    await expect(page.locator('#ai-endpoint')).toContainText('api.groq.com')
+  })
+
+  test('local providers hide the key field, custom reveals the base url', async ({ page }) => {
+    await page.goto('/')
+    await page.locator('#ai-provider').selectOption('ollama')
+    await expect(page.locator('#ai-key-input')).toBeHidden()
+    await expect(page.locator('#ai-endpoint')).toContainText('localhost:11434')
+    await page.locator('#ai-provider').selectOption('custom')
+    await expect(page.locator('#ai-base-url')).toBeVisible()
+    await expect(page.locator('#ai-key-input')).toBeVisible()
   })
 })
 

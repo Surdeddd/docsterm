@@ -1,6 +1,6 @@
 {
   "name": "docsterm",
-  "version": "0.2.0",
+  "version": "0.4.1",
   "type": "module",
   "license": "MIT",
   "description": "Embeddable AI terminal for documentation: a live in-browser console with an AI command assistant",
@@ -11,7 +11,14 @@
     "ai",
     "interactive-tutorial",
     "docs",
-    "pyodide"
+    "pyodide",
+    "openai",
+    "openrouter",
+    "ollama",
+    "llm",
+    "shell",
+    "repl",
+    "sandbox"
   ],
   "author": "Surdeddd (https://github.com/Surdeddd)",
   "homepage": "https://docsterm.vercel.app",
@@ -30,6 +37,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./shell": {
+      "types": "./dist/shell/index.d.ts",
+      "default": "./dist/shell/index.js"
+    },
     "./mock": {
       "types": "./dist/mock/index.d.ts",
       "default": "./dist/mock/index.js"
@@ -41,6 +52,10 @@
     "./anthropic": {
       "types": "./dist/anthropic/index.d.ts",
       "default": "./dist/anthropic/index.js"
+    },
+    "./openai": {
+      "types": "./dist/openai/index.d.ts",
+      "default": "./dist/openai/index.js"
     },
     "./react": {
       "types": "./dist/react/index.d.ts",

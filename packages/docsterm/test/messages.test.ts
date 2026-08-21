@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getMessages, resolveLocale } from '../src/messages'
+import { getMessages, resolveLocale } from '../src/messages.js'
 
 describe('resolveLocale', () => {
   it('maps russian language tags to ru', () => {

@@ -1,4 +1,4 @@
-import type { Backend, BackendHost, BackendRunResult } from '../types'
+import type { Backend, BackendHost, BackendRunResult } from '../types.js'
 
 export interface MockScriptEntry {
   output: string

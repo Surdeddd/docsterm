@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { getMessages, type Messages } from '../src/messages'
-import { SessionController, type SessionIO } from '../src/session-controller'
+import { getMessages, type Messages } from '../src/messages.js'
+import { SessionController, type SessionIO } from '../src/session-controller.js'
 import type {
   AIProvider,
   Backend,
@@ -9,7 +9,7 @@ import type {
   ExplainInput,
   PageContext,
   SuggestInput,
-} from '../src/types'
+} from '../src/types.js'
 
 const messages: Messages = getMessages('en')
 

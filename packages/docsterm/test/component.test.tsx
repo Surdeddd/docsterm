@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { Backend } from '../src/types'
+import type { Backend } from '../src/types.js'
 
 const mountSpy = vi.fn(async (_el: HTMLElement) => {})
 const disposeSpy = vi.fn()
@@ -14,7 +14,7 @@ vi.mock('../src/index', () => ({
   },
 }))
 
-import { DocsTerminal } from '../src/react/index'
+import { DocsTerminal } from '../src/react/index.js'
 
 const backend: Backend = {
   id: 'fake',

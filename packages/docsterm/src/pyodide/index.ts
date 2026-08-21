@@ -1,4 +1,4 @@
-import type { Backend, BackendHost, BackendRunResult } from '../types'
+import type { Backend, BackendHost, BackendRunResult } from '../types.js'
 import { loadPyodide, type PyodideInterface } from 'pyodide'
 
 export const PYODIDE_VERSION = '314.0.5'
