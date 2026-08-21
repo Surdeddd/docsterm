@@ -84,7 +84,7 @@ test.describe('bilingual page', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'en')
     await expect(page.locator('h1')).toContainText('Documentation')
     await expect(page.locator('#why')).toContainText('Why a terminal in the docs')
-    await expect(page.locator('#packages')).toContainText('One package, six doors')
+    await expect(page.locator('#packages')).toContainText('One package, eight doors')
     await expect(page.locator('#packages')).toContainText('docsterm/pyodide')
     await expect(page.locator('#install-code')).toHaveText('npm i docsterm @xterm/xterm')
   })
@@ -95,7 +95,7 @@ test.describe('bilingual page', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'ru')
     await expect(page.locator('h1')).toContainText('Документация')
     await expect(page.locator('#why')).toContainText('Зачем терминал в доках')
-    await expect(page.locator('#packages')).toContainText('Один пакет, шесть входов')
+    await expect(page.locator('#packages')).toContainText('Один пакет, восемь входов')
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       'content',
       /живой терминал/,
@@ -109,6 +109,40 @@ test.describe('bilingual page', () => {
     await expect(page.locator('button[data-lang="ru"]')).toHaveAttribute('aria-pressed', 'true')
     await page.click('button[data-lang="en"]')
     await expect(page.locator('h1')).toContainText('Documentation')
+  })
+})
+
+test.describe('javascript terminal', () => {
+  test('keeps variables between commands and awaits promises', async ({ page }) => {
+    await page.goto('/')
+    const slot = '#terminal-js'
+    await expect(page.locator(slot)).toContainText('docsterm ready')
+    await typeInTerminal(page, slot, 'const users = [1, 2, 3]')
+    await typeInTerminal(page, slot, 'users.map(n => n * 2)')
+    await expect(page.locator(slot)).toContainText('[')
+    await typeInTerminal(page, slot, 'console.log("total:", users.length)')
+    await expect(page.locator(slot)).toContainText('total: 3')
+    await typeInTerminal(page, slot, 'await Promise.resolve("awaited")')
+    await expect(page.locator(slot)).toContainText('awaited')
+  })
+
+  test('reports thrown errors with a non-zero exit code hint', async ({ page }) => {
+    await page.goto('/?ai=mock')
+    const slot = '#terminal-js'
+    await expect(page.locator(slot)).toContainText('docsterm ready')
+    await typeInTerminal(page, slot, 'notDefined()')
+    await expect(page.locator(slot)).toContainText('ReferenceError')
+    await expect(page.locator(slot)).toContainText("Type 'explain'")
+  })
+
+  test('survives an infinite loop by restarting the runtime', async ({ page }) => {
+    await page.goto('/')
+    const slot = '#terminal-js'
+    await expect(page.locator(slot)).toContainText('docsterm ready')
+    await typeInTerminal(page, slot, 'while (true) {}')
+    await expect(page.locator(slot)).toContainText('timed out', { timeout: 20_000 })
+    await typeInTerminal(page, slot, '1 + 1')
+    await expect(page.locator(slot)).toContainText('2')
   })
 })
 

@@ -27,7 +27,9 @@ npm install docsterm @xterm/xterm
 | `docsterm` | Виджет: xterm.js UI, строчный редактор, логика сессии, i18n (en/ru), темы, сбор контекста страницы, mock-AI |
 | `docsterm/shell` | Настоящая оболочка: виртуальная ФС, конвейеры, перенаправления, `&&`/`\|\|`, globs, переменные, ~25 встроенных команд и своя CLI как команда |
 | `docsterm/mock` | Скриптованные команды без вычислений — для туториалов и тестов |
+| `docsterm/javascript` | Рантайм JavaScript в изолированном Web Worker, с таймаутами и живым состоянием |
 | `docsterm/pyodide` | Настоящий Python 3 в браузере (Pyodide, лениво с CDN) |
+| `docsterm/websocket` | Команды выполняются на твоём сервере — docker, git, kubectl, всё что умеет настоящий шелл |
 | `docsterm/anthropic` | AI-провайдер на официальном Anthropic SDK, браузерный режим, BYOK |
 | `docsterm/openai` | AI-провайдер для **любого OpenAI-совместимого эндпоинта** — OpenAI, OpenRouter, Groq, Gemini, DeepSeek, Mistral, xAI, свой шлюз или локальные Ollama / LM Studio. Без зависимостей (чистый `fetch`) |
 | `docsterm/react` | React-компонент `<DocsTerminal>` |
@@ -76,9 +78,57 @@ export const PythonTutorial = () => (
 
 Рецепты для Docusaurus, Vite и чистого HTML: [docs/embedding.md](./docs/embedding.md).
 
+## Что реально может работать в терминале на странице доков
+
+Вкладка браузера — не машина с Linux, поэтому граница проходит честно: **всё, что компилируется в WebAssembly или написано на JS, работает у читателя; всё, чему нужно ядро — Docker, systemd, настоящие процессы — требует машины.** docsterm закрывает обе стороны.
+
+| Что документируешь | Где выполняется | Чем |
+|---|---|---|
+| Свою CLI (`orbit`, `stripe`, `supabase`…) | Браузер читателя | `docsterm/shell` — регистрируешь CLI как команду |
+| Базовый шелл (`ls`, `grep`, конвейеры, перенаправления) | Браузер читателя | `docsterm/shell` — ~25 встроенных команд |
+| JavaScript / TypeScript SDK | Браузер читателя | `docsterm/javascript` — Web Worker, живые переменные, `await` |
+| Библиотеку на Python | Браузер читателя | `docsterm/pyodide` — настоящий CPython на WASM, `pip install` работает |
+| Ruby, PHP, Lua, SQLite, C | Браузер читателя | `Backend` на ~20 строк вокруг `ruby.wasm`, `php-wasm`, `wasmoon`, `sql.js`, … |
+| **Docker, git, kubectl, ssh, npm, настоящий Linux** | **Твой сервер** | `docsterm/websocket` — один сокет до контейнера, которым ты управляешь |
+| Node.js на клиенте | — | Пока нет: зрелой MIT-песочницы не существует (WebContainers и BrowserPod коммерческие, nodepod так и не вышел) |
+
+То есть: **Docker и git поддерживаются — через `docsterm/websocket`.** Запустить рантайм контейнеров внутри вкладки нельзя в принципе, и любой продукт, который утверждает обратное, либо тащит эмулятор x86, либо ходит на сервер. docsterm ходит на сервер, и какой это сервер — решаешь ты.
+
+### Настоящие команды через WebSocket
+
+```ts
+import { createWebSocketBackend } from 'docsterm/websocket'
+
+const backend = createWebSocketBackend({
+  url: 'wss://sandbox.acme.dev/shell',
+  prompt: 'demo@sandbox:~$ ',
+})
+```
+
+Протокол — три JSON-сообщения, поэтому серверная часть крошечная. Вот она целиком, на Node:
+
+```js
+import { WebSocketServer } from 'ws'
+import { exec } from 'node:child_process'
+
+new WebSocketServer({ port: 8080 }).on('connection', (socket) => {
+  socket.send(JSON.stringify({ type: 'ready', banner: 'ubuntu sandbox' }))
+  socket.on('message', (raw) => {
+    const { id, command } = JSON.parse(raw)
+    // Только внутри одноразового контейнера, никогда на хосте:
+    const child = exec(`docker exec docs-sandbox sh -lc ${JSON.stringify(command)}`)
+    child.stdout.on('data', (chunk) => socket.send(JSON.stringify({ type: 'output', id, chunk })))
+    child.stderr.on('data', (chunk) => socket.send(JSON.stringify({ type: 'output', id, chunk })))
+    child.on('close', (code) => socket.send(JSON.stringify({ type: 'exit', id, code: code ?? 0 })))
+  })
+})
+```
+
+Коды возврата приходят обратно в виджет, поэтому `explain` работает на упавшем `git push` ровно так же, как на упавшей строке Python. **Безопасность на тебе:** каждая сессия — одноразовый контейнер без доступов, с лимитом CPU и памяти и без сети хоста: читатель набирает произвольные команды.
+
 ## Бекенды
 
-Бекенд отвечает на один вопрос: что вывела командная строка и с каким кодом завершилась. В пакете их три, а написать четвёртый — строк двадцать.
+Бекенд отвечает на один вопрос: что вывела командная строка и с каким кодом завершилась. В пакете их пять, а написать шестой — строк двадцать.
 
 **`docsterm/shell` — настоящая оболочка в браузере.** Засеваешь дерево файлов, регистрируешь свою CLI как команду — и у читателя рабочее окружение:
 
@@ -109,7 +159,9 @@ const backend = createShellBackend({
 
 Свои команды получают `argv`, `stdin`, `cwd`, `env` и файловую систему, могут быть асинхронными и возвращают либо строку, либо `{ stdout, stderr, exitCode }`.
 
-**`docsterm/pyodide`** запускает настоящий CPython. **`docsterm/mock`** проигрывает заранее заданный сценарий. Всё остальное — WebSocket до своего контейнера, другой WASM-рантайм — это реализация интерфейса `Backend`: `init`, `run`, `dispose`.
+**`docsterm/javascript`** исполняет JavaScript в Web Worker: переменные живут между командами, работает `await` верхнего уровня, `console.log` перехватывается, а таймаут убивает зациклившийся код и перезапускает рантайм вместо того, чтобы повесить страницу.
+
+**`docsterm/pyodide`** запускает настоящий CPython. **`docsterm/websocket`** отправляет команды на твою машину. **`docsterm/mock`** проигрывает заранее заданный сценарий. Всё остальное — другой WASM-рантайм, свой REPL — это реализация интерфейса `Backend`: `init`, `run`, `dispose`.
 
 ## Терминал
 

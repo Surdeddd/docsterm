@@ -1,6 +1,6 @@
 {
   "name": "docsterm",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "type": "module",
   "license": "MIT",
   "description": "Embeddable AI terminal for documentation: a live in-browser console with an AI command assistant",
@@ -18,7 +18,9 @@
     "llm",
     "shell",
     "repl",
-    "sandbox"
+    "sandbox",
+    "websocket",
+    "javascript"
   ],
   "author": "Surdeddd (https://github.com/Surdeddd)",
   "homepage": "https://docsterm.vercel.app",
@@ -41,13 +43,21 @@
       "types": "./dist/shell/index.d.ts",
       "default": "./dist/shell/index.js"
     },
-    "./mock": {
-      "types": "./dist/mock/index.d.ts",
-      "default": "./dist/mock/index.js"
+    "./javascript": {
+      "types": "./dist/javascript/index.d.ts",
+      "default": "./dist/javascript/index.js"
     },
     "./pyodide": {
       "types": "./dist/pyodide/index.d.ts",
       "default": "./dist/pyodide/index.js"
+    },
+    "./websocket": {
+      "types": "./dist/websocket/index.d.ts",
+      "default": "./dist/websocket/index.js"
+    },
+    "./mock": {
+      "types": "./dist/mock/index.d.ts",
+      "default": "./dist/mock/index.js"
     },
     "./anthropic": {
       "types": "./dist/anthropic/index.d.ts",

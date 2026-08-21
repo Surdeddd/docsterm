@@ -27,7 +27,9 @@ Install `docsterm` once and import only the parts you use. Pyodide, the Anthropi
 | `docsterm` | The widget: xterm.js UI, line editor, session logic, i18n (en/ru), themes, page-context collector, mock AI provider |
 | `docsterm/shell` | A real shell: virtual filesystem, pipes, redirects, `&&`/`\|\|`, globs, env vars, ~25 builtins, and your own CLI as a command |
 | `docsterm/mock` | Scripted commands with zero compute — for tutorials and tests |
+| `docsterm/javascript` | A JavaScript runtime in an isolated Web Worker, with timeouts and persistent state |
 | `docsterm/pyodide` | Real Python 3 in the browser (Pyodide, loaded lazily from CDN) |
+| `docsterm/websocket` | Commands executed on your own server — docker, git, kubectl, anything a real shell runs |
 | `docsterm/anthropic` | AI provider on the official Anthropic SDK, browser mode, BYOK |
 | `docsterm/openai` | AI provider for **any OpenAI-compatible endpoint** — OpenAI, OpenRouter, Groq, Gemini, DeepSeek, Mistral, xAI, your own gateway, or a local Ollama / LM Studio model. Zero dependencies (plain `fetch`) |
 | `docsterm/react` | `<DocsTerminal>` React component |
@@ -76,9 +78,57 @@ export const PythonTutorial = () => (
 
 Docusaurus, Vite and plain-HTML recipes: [docs/embedding.md](./docs/embedding.md).
 
+## What can actually run in a terminal on a docs page
+
+A browser tab is not a Linux machine, so be honest about the line: **anything that compiles to WebAssembly or is written in JS runs on the reader's machine; anything that needs a kernel — Docker, systemd, real processes — needs a machine.** docsterm covers both sides.
+
+| You want to document | Runs where | How |
+|---|---|---|
+| Your own CLI (`orbit`, `stripe`, `supabase`…) | Reader's browser | `docsterm/shell` — register the CLI as a command |
+| Shell basics (`ls`, `grep`, pipes, redirects) | Reader's browser | `docsterm/shell` — ~25 builtins |
+| JavaScript / TypeScript SDK | Reader's browser | `docsterm/javascript` — Web Worker, persistent variables, `await` |
+| Python library | Reader's browser | `docsterm/pyodide` — real CPython on WASM, `pip install` works |
+| Ruby, PHP, Lua, SQLite, C | Reader's browser | A ~20-line `Backend` around `ruby.wasm`, `php-wasm`, `wasmoon`, `sql.js`, … |
+| **Docker, git, kubectl, ssh, npm, real Linux** | **Your server** | `docsterm/websocket` — one socket to a container you control |
+| Node.js, client-side | — | Not yet: no mature MIT browser sandbox exists (WebContainers and BrowserPod are commercial, nodepod was never published) |
+
+So: **Docker and git are supported — through `docsterm/websocket`.** There is no way to run a container runtime inside a browser tab, and any product claiming otherwise is either shipping an x86 emulator or calling a server. docsterm calls a server, and you decide which one.
+
+### Real commands over a WebSocket
+
+```ts
+import { createWebSocketBackend } from 'docsterm/websocket'
+
+const backend = createWebSocketBackend({
+  url: 'wss://sandbox.acme.dev/shell',
+  prompt: 'demo@sandbox:~$ ',
+})
+```
+
+The protocol is three JSON messages, so the server side is small — here it is complete, in Node:
+
+```js
+import { WebSocketServer } from 'ws'
+import { exec } from 'node:child_process'
+
+new WebSocketServer({ port: 8080 }).on('connection', (socket) => {
+  socket.send(JSON.stringify({ type: 'ready', banner: 'ubuntu sandbox' }))
+  socket.on('message', (raw) => {
+    const { id, command } = JSON.parse(raw)
+    // Run it inside a throwaway container, never on the host:
+    const child = exec(`docker exec docs-sandbox sh -lc ${JSON.stringify(command)}`)
+    child.stdout.on('data', (chunk) => socket.send(JSON.stringify({ type: 'output', id, chunk })))
+    child.stderr.on('data', (chunk) => socket.send(JSON.stringify({ type: 'output', id, chunk })))
+    child.on('close', (code) => socket.send(JSON.stringify({ type: 'exit', id, code: code ?? 0 })))
+  })
+})
+```
+
+Exit codes come back to the widget, so `explain` works on a failed `git push` exactly as it does on a failed Python line. **Security is yours:** run every session in a disposable container with no credentials, a CPU/memory cap and no host network — the reader is typing arbitrary commands.
+
 ## Backends
 
-A backend answers one question: given a command line, what is the output and the exit code. Three ship with the package, and writing a fourth is ~20 lines.
+A backend answers one question: given a command line, what is the output and the exit code. Five ship with the package, and writing a sixth is ~20 lines.
 
 **`docsterm/shell` — a real shell, in the browser.** Seed it with a file tree, register your own CLI as a command, and readers get a working environment:
 
@@ -109,7 +159,9 @@ Builtins: `pwd cd ls cat echo touch mkdir rm cp mv head tail wc grep sort uniq f
 
 Custom commands get `argv`, `stdin`, `cwd`, `env` and the filesystem, may be async, and return either a string or `{ stdout, stderr, exitCode }`.
 
-**`docsterm/pyodide`** runs real CPython. **`docsterm/mock`** replays a fixed script. Anything else — a WebSocket to your own container, another WASM runtime — is a `Backend` implementation: `init`, `run`, `dispose`.
+**`docsterm/javascript`** evaluates JavaScript in a Web Worker: variables persist between commands, top-level `await` works, `console.log` is captured, and a configurable timeout terminates a runaway loop and restarts the runtime instead of freezing the page.
+
+**`docsterm/pyodide`** runs real CPython. **`docsterm/websocket`** forwards commands to your own machine. **`docsterm/mock`** replays a fixed script. Anything else — another WASM runtime, a REPL of your own — is a `Backend` implementation: `init`, `run`, `dispose`.
 
 ## The terminal
 

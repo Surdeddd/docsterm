@@ -8,6 +8,7 @@ import {
   type TerminalTheme,
 } from 'docsterm'
 import { createShellBackend, type ShellCommand } from 'docsterm/shell'
+import { createJavaScriptBackend } from 'docsterm/javascript'
 import { createPyodideBackend } from 'docsterm/pyodide'
 import { buildConfiguredProvider, setupAiSettings } from './ai-settings'
 import { getPageStrings, type PageStrings } from './i18n'
@@ -255,6 +256,21 @@ if (shellSlot) {
     fontFamily: TERMINAL_FONT,
     fontSize: 13,
   }).mount(shellSlot)
+}
+
+const jsSlot = document.querySelector<HTMLElement>('#terminal-js')
+if (jsSlot) {
+  void new DocsTerminal({
+    backend: createJavaScriptBackend({
+      banner: 'javascript - variables persist between commands, top-level await works',
+      timeoutMs: 5000,
+    }),
+    ai: makeAi(),
+    locale,
+    theme: terminalTheme,
+    fontFamily: TERMINAL_FONT,
+    fontSize: 13,
+  }).mount(jsSlot)
 }
 
 const bootButton = document.querySelector<HTMLButtonElement>('#python-boot')

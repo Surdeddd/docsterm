@@ -40,6 +40,11 @@ export interface PageStrings {
   aiStatusSet: string
   aiStatusEmpty: string
   aiMockNote: string
+  jsNumber: string
+  jsTitle: string
+  jsLead: string
+  jsTry: string
+  terminalLabelJs: string
   pythonNumber: string
   pythonTitle: string
   pythonLead: string
@@ -120,29 +125,37 @@ const en: PageStrings = {
   aiStatusSet: 'configured in this browser. Reload the page to use it.',
   aiStatusEmpty: 'not configured - AI is off unless the page is opened with ?ai=mock.',
   aiMockNote: 'open the mock flow',
-  pythonNumber: '03',
+  jsNumber: '03',
+  jsTitle: 'JavaScript, instantly',
+  jsLead:
+    'The terminal below is a real JavaScript runtime in a Web Worker: persistent variables, async/await, console output, and a hard timeout that kills an infinite loop instead of freezing the page. Nothing to download - it starts with the page.',
+  jsTry: 'try: const users = [1, 2, 3] · users.map(n => n * 2) · await fetch("/").then(r => r.status)',
+  terminalLabelJs: 'javascript - web worker, isolated',
+  pythonNumber: '04',
   pythonTitle: 'Real Python, client-side',
   pythonLead:
     'The terminal below is a full CPython build compiled to WebAssembly (Pyodide), fetched lazily on first use. Nothing runs on a server; the reader machine does the work.',
   pythonBoot: 'start the python environment',
   pythonBooting: 'loading python...',
   pythonTry: 'try: print("sum:", 6 * 7) · import sys; sys.version · 1 / 0',
-  embedNumber: '04',
+  embedNumber: '05',
   embedTitle: 'Five minutes to embed',
   embedLead:
     'One React component, or a few lines of vanilla JS. Docusaurus, Vite and plain-HTML recipes live in the repository.',
   embedReact: 'React (Docusaurus, Next, Vite)',
   embedVanilla: 'Vanilla',
   embedDocs: 'read the embedding guide',
-  packagesNumber: '05',
-  packagesTitle: 'One package, six doors',
+  packagesNumber: '06',
+  packagesTitle: 'One package, eight doors',
   packagesLead:
     'Install docsterm once and import only what you use. Pyodide, the Anthropic SDK and React are optional peers - skip an entry point and its dependency never lands in your bundle.',
   packages: [
     { name: 'docsterm', body: 'The widget: terminal UI, session logic, i18n, themes, page context.' },
     { name: 'docsterm/shell', body: 'A real shell: virtual filesystem, pipes, redirects, your own commands.' },
     { name: 'docsterm/mock', body: 'Scripted commands with zero compute - for tutorials and tests.' },
+    { name: 'docsterm/javascript', body: 'A JavaScript runtime in an isolated Web Worker, with timeouts.' },
     { name: 'docsterm/pyodide', body: 'Real Python 3 in the browser, loaded on demand.' },
+    { name: 'docsterm/websocket', body: 'Your own server: docker, git, kubectl - anything a real shell runs.' },
     { name: 'docsterm/anthropic', body: 'Command suggestions and error explanations, BYOK.' },
     { name: 'docsterm/react', body: 'The React component wrapper.' },
   ],
@@ -210,29 +223,37 @@ const ru: PageStrings = {
   aiStatusSet: 'настроено в этом браузере. Перезагрузи страницу, чтобы применилось.',
   aiStatusEmpty: 'не настроено - AI выключен, пока страница не открыта с ?ai=mock.',
   aiMockNote: 'открыть mock-режим',
-  pythonNumber: '03',
+  jsNumber: '03',
+  jsTitle: 'JavaScript сразу',
+  jsLead:
+    'Терминал ниже - настоящий рантайм JavaScript в Web Worker: переменные живут между командами, работает async/await и console, а жёсткий таймаут убивает бесконечный цикл вместо того, чтобы повесить страницу. Качать нечего - он готов вместе со страницей.',
+  jsTry: 'попробуй: const users = [1, 2, 3] · users.map(n => n * 2) · await fetch("/").then(r => r.status)',
+  terminalLabelJs: 'javascript - web worker, изолированно',
+  pythonNumber: '04',
   pythonTitle: 'Настоящий Python на клиенте',
   pythonLead:
     'Терминал ниже - полноценный CPython, собранный в WebAssembly (Pyodide) и подгружаемый лениво при первом запуске. На сервере не выполняется ничего: работает машина читателя.',
   pythonBoot: 'запустить python-окружение',
   pythonBooting: 'загружаю python...',
   pythonTry: 'попробуй: print("сумма:", 6 * 7) · import sys; sys.version · 1 / 0',
-  embedNumber: '04',
+  embedNumber: '05',
   embedTitle: 'Пять минут на встраивание',
   embedLead:
     'Один React-компонент или несколько строк на чистом JS. Рецепты для Docusaurus, Vite и обычного HTML лежат в репозитории.',
   embedReact: 'React (Docusaurus, Next, Vite)',
   embedVanilla: 'Чистый JS',
   embedDocs: 'открыть гайд по встраиванию',
-  packagesNumber: '05',
-  packagesTitle: 'Один пакет, шесть входов',
+  packagesNumber: '06',
+  packagesTitle: 'Один пакет, восемь входов',
   packagesLead:
     'Ставится docsterm один раз, импортируется только то, что нужно. Pyodide, Anthropic SDK и React - опциональные peer-зависимости: не импортируешь вход - его зависимость не попадает ни в бандл, ни в node_modules.',
   packages: [
     { name: 'docsterm', body: 'Виджет: интерфейс терминала, логика сессии, i18n, темы, контекст страницы.' },
     { name: 'docsterm/shell', body: 'Настоящая оболочка: виртуальная ФС, конвейеры, перенаправления, свои команды.' },
     { name: 'docsterm/mock', body: 'Скриптованные команды без вычислений - для туториалов и тестов.' },
+    { name: 'docsterm/javascript', body: 'Рантайм JavaScript в изолированном Web Worker, с таймаутами.' },
     { name: 'docsterm/pyodide', body: 'Настоящий Python 3 в браузере, подгружается по требованию.' },
+    { name: 'docsterm/websocket', body: 'Свой сервер: docker, git, kubectl - всё, что умеет настоящий шелл.' },
     { name: 'docsterm/anthropic', body: 'Подсказки команд и объяснение ошибок, ключ читателя.' },
     { name: 'docsterm/react', body: 'Обёртка-компонент для React.' },
   ],
