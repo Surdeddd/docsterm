@@ -1,0 +1,228 @@
+import type { Locale } from 'docsterm'
+
+export interface PageStrings {
+  documentTitle: string
+  documentDescription: string
+  navDocs: string
+  navNpm: string
+  navGithub: string
+  langLabel: string
+  themeLabel: string
+  themeLight: string
+  themeDark: string
+  heroEyebrow: string
+  heroTitleLead: string
+  heroTitleAccent: string
+  heroTitleTail: string
+  heroLead: string
+  heroInstallLabel: string
+  heroCopy: string
+  heroCopied: string
+  terminalLabelMock: string
+  terminalLabelPython: string
+  heroTryLabel: string
+  heroTryItems: string[]
+  whyNumber: string
+  whyTitle: string
+  whyItems: Array<{ title: string; body: string }>
+  aiNumber: string
+  aiTitle: string
+  aiLead: string
+  aiKeyPlaceholder: string
+  aiSave: string
+  aiClear: string
+  aiStatusSet: string
+  aiStatusEmpty: string
+  aiMockNote: string
+  pythonNumber: string
+  pythonTitle: string
+  pythonLead: string
+  pythonBoot: string
+  pythonBooting: string
+  pythonTry: string
+  embedNumber: string
+  embedTitle: string
+  embedLead: string
+  embedReact: string
+  embedVanilla: string
+  embedDocs: string
+  packagesNumber: string
+  packagesTitle: string
+  packagesLead: string
+  packages: Array<{ name: string; body: string }>
+  footerTagline: string
+  footerBy: string
+  footerLicense: string
+}
+
+const en: PageStrings = {
+  documentTitle: 'docsterm - an embeddable AI terminal for documentation',
+  documentDescription:
+    'docsterm puts a live terminal inside your documentation. Commands run in the reader browser, and an AI assistant turns plain language into the right command and explains failures.',
+  navDocs: 'docs',
+  navNpm: 'npm',
+  navGithub: 'github',
+  langLabel: 'lang',
+  themeLabel: 'theme',
+  themeLight: 'light',
+  themeDark: 'dark',
+  heroEyebrow: 'open source · MIT · v0.1',
+  heroTitleLead: 'Documentation',
+  heroTitleAccent: 'your readers',
+  heroTitleTail: 'can run.',
+  heroLead:
+    'docsterm drops a live console into any docs page. Commands execute in the reader browser - no servers, no VMs. The AI layer turns a plain-language request into the right command, and explains the error when something breaks.',
+  heroInstallLabel: 'install',
+  heroCopy: 'copy',
+  heroCopied: 'copied',
+  terminalLabelMock: 'orbit cli - scripted tutorial',
+  terminalLabelPython: 'python 3 - pyodide, in your browser',
+  heroTryLabel: 'try',
+  heroTryItems: ['orbit init', 'orbit deploy', '#deploy the app', 'orbit destroy', 'explain'],
+  whyNumber: '01',
+  whyTitle: 'Why a terminal in the docs',
+  whyItems: [
+    {
+      title: 'Copy-paste loses readers',
+      body:
+        'A reader leaves the page for their own shell, mistypes a flag, and never comes back to step four. Every context switch is a drop-off you never see.',
+    },
+    {
+      title: 'Hosted sandboxes are heavy',
+      body:
+        'Killercoda, Instruqt and friends boot server VMs: thousands a month, an ops burden, and a separate platform your docs have to link away to.',
+    },
+    {
+      title: 'The page is the context',
+      body:
+        'docsterm runs client-side and reads the page it sits on - title, description, headings. The assistant already knows which tutorial the reader is in.',
+    },
+  ],
+  aiNumber: '02',
+  aiTitle: 'Bring your own key',
+  aiLead:
+    'The AI layer talks to the Anthropic API straight from the browser. The key lives in this browser localStorage and goes nowhere else. Add ?ai=mock to the URL to try the whole flow offline, with no key at all.',
+  aiKeyPlaceholder: 'sk-ant-... (Anthropic API key)',
+  aiSave: 'save key',
+  aiClear: 'clear',
+  aiStatusSet: 'key stored in this browser. Reload the page to use it.',
+  aiStatusEmpty: 'no key set - AI is off unless the page is opened with ?ai=mock.',
+  aiMockNote: 'open the mock flow',
+  pythonNumber: '03',
+  pythonTitle: 'Real Python, client-side',
+  pythonLead:
+    'The terminal below is a full CPython build compiled to WebAssembly (Pyodide), fetched lazily on first use. Nothing runs on a server; the reader machine does the work.',
+  pythonBoot: 'start the python environment',
+  pythonBooting: 'loading python...',
+  pythonTry: 'try: print("sum:", 6 * 7) · import sys; sys.version · 1 / 0',
+  embedNumber: '04',
+  embedTitle: 'Five minutes to embed',
+  embedLead:
+    'One React component, or a few lines of vanilla JS. Docusaurus, Vite and plain-HTML recipes live in the repository.',
+  embedReact: 'React (Docusaurus, Next, Vite)',
+  embedVanilla: 'Vanilla',
+  embedDocs: 'read the embedding guide',
+  packagesNumber: '05',
+  packagesTitle: 'One package, five doors',
+  packagesLead:
+    'Install docsterm once and import only what you use. Pyodide, the Anthropic SDK and React are optional peers - skip an entry point and its dependency never lands in your bundle.',
+  packages: [
+    { name: 'docsterm', body: 'The widget: terminal UI, session logic, i18n, themes, page context.' },
+    { name: 'docsterm/mock', body: 'Scripted commands with zero compute - for tutorials and tests.' },
+    { name: 'docsterm/pyodide', body: 'Real Python 3 in the browser, loaded on demand.' },
+    { name: 'docsterm/anthropic', body: 'Command suggestions and error explanations, BYOK.' },
+    { name: 'docsterm/react', body: 'The React component wrapper.' },
+  ],
+  footerTagline: 'An embeddable AI terminal for documentation.',
+  footerBy: 'built by',
+  footerLicense: 'MIT · open source',
+}
+
+const ru: PageStrings = {
+  documentTitle: 'docsterm - встраиваемый AI-терминал для документации',
+  documentDescription:
+    'docsterm ставит живой терминал прямо в документацию. Команды выполняются в браузере читателя, а AI превращает обычную формулировку в нужную команду и объясняет ошибки.',
+  navDocs: 'доки',
+  navNpm: 'npm',
+  navGithub: 'github',
+  langLabel: 'язык',
+  themeLabel: 'тема',
+  themeLight: 'светлая',
+  themeDark: 'тёмная',
+  heroEyebrow: 'open source · MIT · v0.1',
+  heroTitleLead: 'Документация,',
+  heroTitleAccent: 'которую читатель',
+  heroTitleTail: 'запускает.',
+  heroLead:
+    'docsterm встраивает живую консоль в любую страницу доков. Команды выполняются в браузере читателя - без серверов и виртуалок. AI превращает запрос обычными словами в нужную команду и объясняет ошибку, когда что-то падает.',
+  heroInstallLabel: 'установка',
+  heroCopy: 'копировать',
+  heroCopied: 'скопировано',
+  terminalLabelMock: 'orbit cli - скриптованный туториал',
+  terminalLabelPython: 'python 3 - pyodide, прямо в браузере',
+  heroTryLabel: 'попробуй',
+  heroTryItems: ['orbit init', 'orbit deploy', '#задеплой приложение', 'orbit destroy', 'explain'],
+  whyNumber: '01',
+  whyTitle: 'Зачем терминал в доках',
+  whyItems: [
+    {
+      title: 'Копипаст теряет читателей',
+      body:
+        'Читатель уходит со страницы в свой шелл, ошибается во флаге и до четвёртого шага уже не возвращается. Каждое переключение контекста - отвал, которого вы не видите.',
+    },
+    {
+      title: 'Хостед-песочницы тяжёлые',
+      body:
+        'Killercoda, Instruqt и подобные поднимают серверные VM: тысячи долларов в месяц, отдельный ops и чужая платформа, куда доки вынуждены уводить читателя.',
+    },
+    {
+      title: 'Контекст - сама страница',
+      body:
+        'docsterm работает на клиенте и читает страницу, на которой стоит: заголовок, описание, подзаголовки. Ассистент уже знает, в каком туториале находится читатель.',
+    },
+  ],
+  aiNumber: '02',
+  aiTitle: 'Ключ - свой',
+  aiLead:
+    'AI-слой ходит в Anthropic API прямо из браузера. Ключ лежит в localStorage этого браузера и больше никуда не уходит. Добавь ?ai=mock к адресу - и весь сценарий можно попробовать офлайн, вообще без ключа.',
+  aiKeyPlaceholder: 'sk-ant-... (ключ Anthropic API)',
+  aiSave: 'сохранить ключ',
+  aiClear: 'очистить',
+  aiStatusSet: 'ключ сохранён в этом браузере. Перезагрузи страницу, чтобы он применился.',
+  aiStatusEmpty: 'ключа нет - AI выключен, пока страница не открыта с ?ai=mock.',
+  aiMockNote: 'открыть mock-режим',
+  pythonNumber: '03',
+  pythonTitle: 'Настоящий Python на клиенте',
+  pythonLead:
+    'Терминал ниже - полноценный CPython, собранный в WebAssembly (Pyodide) и подгружаемый лениво при первом запуске. На сервере не выполняется ничего: работает машина читателя.',
+  pythonBoot: 'запустить python-окружение',
+  pythonBooting: 'загружаю python...',
+  pythonTry: 'попробуй: print("сумма:", 6 * 7) · import sys; sys.version · 1 / 0',
+  embedNumber: '04',
+  embedTitle: 'Пять минут на встраивание',
+  embedLead:
+    'Один React-компонент или несколько строк на чистом JS. Рецепты для Docusaurus, Vite и обычного HTML лежат в репозитории.',
+  embedReact: 'React (Docusaurus, Next, Vite)',
+  embedVanilla: 'Чистый JS',
+  embedDocs: 'открыть гайд по встраиванию',
+  packagesNumber: '05',
+  packagesTitle: 'Один пакет, пять входов',
+  packagesLead:
+    'Ставится docsterm один раз, импортируется только то, что нужно. Pyodide, Anthropic SDK и React - опциональные peer-зависимости: не импортируешь вход - его зависимость не попадает ни в бандл, ни в node_modules.',
+  packages: [
+    { name: 'docsterm', body: 'Виджет: интерфейс терминала, логика сессии, i18n, темы, контекст страницы.' },
+    { name: 'docsterm/mock', body: 'Скриптованные команды без вычислений - для туториалов и тестов.' },
+    { name: 'docsterm/pyodide', body: 'Настоящий Python 3 в браузере, подгружается по требованию.' },
+    { name: 'docsterm/anthropic', body: 'Подсказки команд и объяснение ошибок, ключ читателя.' },
+    { name: 'docsterm/react', body: 'Обёртка-компонент для React.' },
+  ],
+  footerTagline: 'Встраиваемый AI-терминал для документации.',
+  footerBy: 'сделал',
+  footerLicense: 'MIT · открытый код',
+}
+
+const catalogs: Record<Locale, PageStrings> = { en, ru }
+
+export function getPageStrings(locale: Locale): PageStrings {
+  return catalogs[locale]
+}

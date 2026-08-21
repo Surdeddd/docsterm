@@ -23,51 +23,24 @@ importers:
 
   demo:
     dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.118.0
+        version: 0.118.0
       '@xterm/xterm':
         specifier: 6.0.0
         version: 6.0.0
       docsterm:
         specifier: workspace:*
-        version: link:../packages/core
-      docsterm-ai-anthropic:
-        specifier: workspace:*
-        version: link:../packages/ai-anthropic
-      docsterm-backend-mock:
-        specifier: workspace:*
-        version: link:../packages/backend-mock
-      docsterm-backend-pyodide:
-        specifier: workspace:*
-        version: link:../packages/backend-pyodide
+        version: link:../packages/docsterm
+      pyodide:
+        specifier: 314.0.5
+        version: 314.0.5
     devDependencies:
       vite:
         specifier: ^8.2.1
         version: 8.2.1
 
-  packages/ai-anthropic:
-    dependencies:
-      '@anthropic-ai/sdk':
-        specifier: ^0.118.0
-        version: 0.118.0
-      docsterm:
-        specifier: workspace:*
-        version: link:../core
-
-  packages/backend-mock:
-    dependencies:
-      docsterm:
-        specifier: workspace:*
-        version: link:../core
-
-  packages/backend-pyodide:
-    dependencies:
-      docsterm:
-        specifier: workspace:*
-        version: link:../core
-      pyodide:
-        specifier: 314.0.5
-        version: 314.0.5
-
-  packages/core:
+  packages/docsterm:
     dependencies:
       '@xterm/addon-fit':
         specifier: 0.11.0
@@ -75,27 +48,27 @@ importers:
       '@xterm/xterm':
         specifier: 6.0.0
         version: 6.0.0
-
-  packages/react:
-    dependencies:
-      docsterm:
-        specifier: workspace:*
-        version: link:../core
     devDependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.118.0
+        version: 0.118.0
       '@testing-library/react':
-        specifier: ^16.3.2
+        specifier: ^16.3.0
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@types/react':
-        specifier: ^19.2.18
+        specifier: ^19.2.4
         version: 19.2.18
       '@types/react-dom':
         specifier: ^19.2.4
         version: 19.2.4(@types/react@19.2.18)
+      pyodide:
+        specifier: 314.0.5
+        version: 314.0.5
       react:
-        specifier: ^19.2.8
+        specifier: ^19.2.0
         version: 19.2.8
       react-dom:
-        specifier: ^19.2.8
+        specifier: ^19.2.0
         version: 19.2.8(react@19.2.8)
 
 packages:

@@ -3,78 +3,181 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Orbit is a fictional CLI for deploying tiny apps. This page demonstrates docsterm, an embeddable AI terminal for documentation." />
-    <title>Orbit CLI documentation - docsterm demo</title>
+    <meta name="description" content="docsterm puts a live terminal inside your documentation." />
+    <title>docsterm - an embeddable AI terminal for documentation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
-    <header class="site-header">
-      <div class="brand">docsterm <span class="badge">demo</span></div>
-      <nav class="controls">
-        <label>widget language
-          <select id="locale-select">
-            <option value="en">English</option>
-            <option value="ru">Русский</option>
-          </select>
-        </label>
-        <label>theme
-          <select id="theme-select">
-            <option value="auto">auto</option>
-            <option value="light">light</option>
-            <option value="dark">dark</option>
-          </select>
-        </label>
-      </nav>
+    <div class="grain" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <a class="brand" href="/">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">docsterm</span>
+      </a>
+      <div class="topbar-controls">
+        <div class="switch" role="group" data-switch="lang">
+          <span class="switch-label" data-i18n="langLabel"></span>
+          <button type="button" data-lang="en">EN</button>
+          <button type="button" data-lang="ru">RU</button>
+        </div>
+        <div class="switch" role="group" data-switch="theme">
+          <span class="switch-label" data-i18n="themeLabel"></span>
+          <button type="button" data-theme-set="light" data-i18n="themeLight"></button>
+          <button type="button" data-theme-set="dark" data-i18n="themeDark"></button>
+        </div>
+        <nav class="topbar-links">
+          <a href="https://www.npmjs.com/package/docsterm" data-i18n="navNpm"></a>
+          <a href="https://github.com/Surdeddd/docsterm" data-i18n="navGithub"></a>
+        </nav>
+      </div>
     </header>
 
     <main>
-      <h1>Orbit CLI documentation</h1>
-      <p class="lead">
-        Orbit is a <em>fictional</em> command-line tool for deploying tiny apps. Every terminal on
-        this page is live: commands run right here in your browser, and the AI layer can turn a
-        plain-language request into a command. This page itself is the demo of
-        <strong>docsterm</strong> - an embeddable AI terminal for docs.
-      </p>
+      <section class="hero">
+        <p class="eyebrow reveal" data-i18n="heroEyebrow"></p>
+        <h1 class="display reveal">
+          <span data-i18n="heroTitleLead"></span>
+          <em data-i18n="heroTitleAccent"></em>
+          <span data-i18n="heroTitleTail"></span>
+        </h1>
+        <div class="hero-body">
+          <p class="lead reveal" data-i18n="heroLead"></p>
+          <div class="install reveal">
+            <span class="install-label" data-i18n="heroInstallLabel"></span>
+            <code id="install-code">npm i docsterm @xterm/xterm</code>
+            <button type="button" id="copy-install" data-i18n="heroCopy"></button>
+          </div>
+        </div>
 
-      <section id="ai-settings-section">
-        <h2>AI settings</h2>
-        <p>
-          The AI features are bring-your-own-key: add an Anthropic API key and it stays in your
-          browser's localStorage. Requests go directly from your browser to the Anthropic API.
-          Append <code>?ai=mock</code> to the URL to try the AI flow with a built-in offline mock.
-        </p>
-        <div id="ai-settings"></div>
+        <figure class="terminal-frame reveal">
+          <figcaption class="terminal-label">
+            <span class="dot" aria-hidden="true"></span>
+            <span data-i18n="terminalLabelMock"></span>
+          </figcaption>
+          <div id="terminal-mock" class="terminal-slot"></div>
+          <div class="terminal-hint">
+            <span data-i18n="heroTryLabel"></span>
+            <span id="try-items"></span>
+          </div>
+        </figure>
       </section>
 
-      <section>
-        <h2>Getting started</h2>
-        <p>
-          Initialize a project, deploy it, and check its status. Try
-          <code>orbit init</code>, then <code>orbit deploy</code>, then <code>orbit status</code>.
-          Ask the AI with <code>#deploy the app</code>. To see error handling, run
-          <code>orbit destroy</code> and then type <code>explain</code>.
-        </p>
-        <div id="terminal-mock" class="terminal-slot"></div>
+      <section class="band" id="why">
+        <div class="band-head">
+          <span class="marker" data-i18n="whyNumber"></span>
+          <h2 data-i18n="whyTitle"></h2>
+        </div>
+        <div class="why-grid" id="why-grid"></div>
       </section>
 
-      <section>
-        <h2>Python tutorial</h2>
-        <p>
-          Orbit automation scripts are written in Python. The terminal below is a real Python
-          environment (Pyodide) running fully client-side. Boot it and try
-          <code>print(2 + 2)</code> or <code>import sys; sys.version</code>.
-        </p>
-        <button id="python-boot">Start Python environment</button>
-        <div id="terminal-python" class="terminal-slot"></div>
+      <section class="band" id="ai">
+        <div class="band-head">
+          <span class="marker" data-i18n="aiNumber"></span>
+          <h2 data-i18n="aiTitle"></h2>
+        </div>
+        <div class="band-body">
+          <p class="prose" data-i18n="aiLead"></p>
+          <div id="ai-settings"></div>
+        </div>
       </section>
 
-      <section>
-        <h2>Embedding</h2>
-        <p>
-          One React component or a few lines of vanilla JS: see the repository's
-          <code>docs/embedding.md</code> for Docusaurus, Vite and plain-HTML recipes.
-        </p>
+      <section class="band" id="python">
+        <div class="band-head">
+          <span class="marker" data-i18n="pythonNumber"></span>
+          <h2 data-i18n="pythonTitle"></h2>
+        </div>
+        <div class="band-body">
+          <p class="prose" data-i18n="pythonLead"></p>
+          <button type="button" id="python-boot" class="action" data-i18n="pythonBoot"></button>
+          <figure class="terminal-frame" id="python-frame" hidden>
+            <figcaption class="terminal-label">
+              <span class="dot" aria-hidden="true"></span>
+              <span data-i18n="terminalLabelPython"></span>
+            </figcaption>
+            <div id="terminal-python" class="terminal-slot"></div>
+            <div class="terminal-hint"><span data-i18n="pythonTry"></span></div>
+          </figure>
+        </div>
+      </section>
+
+      <section class="band" id="embed">
+        <div class="band-head">
+          <span class="marker" data-i18n="embedNumber"></span>
+          <h2 data-i18n="embedTitle"></h2>
+        </div>
+        <div class="band-body">
+          <p class="prose" data-i18n="embedLead"></p>
+          <div class="code-grid">
+            <article class="code-card">
+              <h3 data-i18n="embedReact"></h3>
+              <pre><code>import '@xterm/xterm/css/xterm.css'
+import { DocsTerminal } from 'docsterm/react'
+import { createPyodideBackend } from 'docsterm/pyodide'
+
+export const Playground = () =&gt; (
+  &lt;DocsTerminal
+    backend={createPyodideBackend()}
+    theme="auto"
+  /&gt;
+)</code></pre>
+            </article>
+            <article class="code-card">
+              <h3 data-i18n="embedVanilla"></h3>
+              <pre><code>import '@xterm/xterm/css/xterm.css'
+import { DocsTerminal } from 'docsterm'
+import { createMockBackend } from 'docsterm/mock'
+
+const term = new DocsTerminal({
+  backend: createMockBackend({
+    script: {
+      'orbit init': { output: 'Project initialized.' },
+    },
+  }),
+})
+await term.mount(
+  document.querySelector('#terminal'),
+)</code></pre>
+            </article>
+          </div>
+          <a
+            class="action ghost"
+            href="https://github.com/Surdeddd/docsterm/blob/main/docs/embedding.md"
+            data-i18n="embedDocs"
+          ></a>
+        </div>
+      </section>
+
+      <section class="band" id="packages">
+        <div class="band-head">
+          <span class="marker" data-i18n="packagesNumber"></span>
+          <h2 data-i18n="packagesTitle"></h2>
+        </div>
+        <div class="band-body">
+          <p class="prose" data-i18n="packagesLead"></p>
+          <ul class="package-list" id="package-list"></ul>
+        </div>
       </section>
     </main>
+
+    <footer class="footer">
+      <p class="footer-tagline" data-i18n="footerTagline"></p>
+      <p class="footer-meta">
+        <span class="byline">
+          <span data-i18n="footerBy"></span>
+          <a href="https://github.com/Surdeddd">Surdeddd</a>
+        </span>
+        <a href="https://github.com/Surdeddd/docsterm">github</a>
+        <a href="https://www.npmjs.com/package/docsterm">npm</a>
+        <span data-i18n="footerLicense"></span>
+      </p>
+    </footer>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

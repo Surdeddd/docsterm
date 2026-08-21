@@ -4,10 +4,10 @@ Three recipes for putting a live terminal into your docs. In every setup the app
 
 ## Docusaurus (MDX)
 
-`docsterm-react` works directly inside MDX pages — no dedicated plugin needed. Docusaurus renders MDX with React, so wrap the terminal in `<BrowserOnly>` (xterm needs a real DOM):
+`docsterm/react` works directly inside MDX pages — no dedicated plugin needed. Docusaurus renders MDX with React, so wrap the terminal in `<BrowserOnly>` (xterm needs a real DOM):
 
 ```bash
-npm install docsterm docsterm-react docsterm-backend-mock @xterm/xterm
+npm install docsterm @xterm/xterm
 ```
 
 ```mdx
@@ -18,8 +18,8 @@ import BrowserOnly from '@docusaurus/BrowserOnly'
 <BrowserOnly>
   {() => {
     require('@xterm/xterm/css/xterm.css')
-    const { DocsTerminal } = require('docsterm-react')
-    const { createMockBackend } = require('docsterm-backend-mock')
+    const { DocsTerminal } = require('docsterm/react')
+    const { createMockBackend } = require('docsterm/mock')
     const backend = createMockBackend({
       script: {
         'orbit init': { output: 'Project initialized.' },
@@ -37,9 +37,9 @@ The widget picks up the page title, meta description and headings automatically 
 
 ```tsx
 import '@xterm/xterm/css/xterm.css'
-import { DocsTerminal } from 'docsterm-react'
-import { createPyodideBackend } from 'docsterm-backend-pyodide'
-import { createAnthropicProvider } from 'docsterm-ai-anthropic'
+import { DocsTerminal } from 'docsterm/react'
+import { createPyodideBackend } from 'docsterm/pyodide'
+import { createAnthropicProvider } from 'docsterm/anthropic'
 
 export function PythonPlayground() {
   return (
@@ -61,13 +61,13 @@ The component mounts the widget on mount and disposes it on unmount; a new `back
 ```ts
 import '@xterm/xterm/css/xterm.css'
 import { DocsTerminal } from 'docsterm'
-import { createPyodideBackend } from 'docsterm-backend-pyodide'
+import { createPyodideBackend } from 'docsterm/pyodide'
 
 const terminal = new DocsTerminal({ backend: createPyodideBackend(), theme: 'auto' })
 await terminal.mount(document.querySelector('#terminal')!)
 ```
 
-When `docsterm-backend-pyodide` is bundled with Vite, exclude pyodide from dependency pre-bundling:
+When `docsterm/pyodide` is bundled with Vite, exclude pyodide from dependency pre-bundling:
 
 ```ts
 export default defineConfig({

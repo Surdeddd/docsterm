@@ -7,7 +7,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "pnpm -r --filter './packages/*' run build",
+    "build": "pnpm --filter docsterm run build",
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm run build && vitest run",
     "e2e": "playwright test"

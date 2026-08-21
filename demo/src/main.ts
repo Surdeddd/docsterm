@@ -6,24 +6,142 @@ import {
   keyStore,
   type AIProvider,
   type Locale,
+  type TerminalTheme,
 } from 'docsterm'
-import { createMockBackend } from 'docsterm-backend-mock'
-import { createPyodideBackend } from 'docsterm-backend-pyodide'
-import { ANTHROPIC_KEY_NAME, createAnthropicProvider } from 'docsterm-ai-anthropic'
+import { createMockBackend } from 'docsterm/mock'
+import { createPyodideBackend } from 'docsterm/pyodide'
+import { ANTHROPIC_KEY_NAME, createAnthropicProvider } from 'docsterm/anthropic'
 import { setupAiSettings } from './ai-settings'
+import { getPageStrings, type PageStrings } from './i18n'
 
 const params = new URLSearchParams(location.search)
 
 const rawLocale = params.get('locale')
-const locale: Locale | undefined = rawLocale === 'ru' ? 'ru' : rawLocale === 'en' ? 'en' : undefined
+const locale: Locale = rawLocale === 'ru' ? 'ru' : 'en'
+const strings = getPageStrings(locale)
 
 const rawTheme = params.get('theme')
-const theme: 'light' | 'dark' | 'auto' =
-  rawTheme === 'light' || rawTheme === 'dark' ? rawTheme : 'auto'
-
 const prefersDark =
-  theme === 'dark' || (theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)
-document.body.dataset.theme = prefersDark ? 'dark' : 'light'
+  typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches
+const theme: 'light' | 'dark' = rawTheme === 'light' || rawTheme === 'dark' ? rawTheme : prefersDark ? 'dark' : 'light'
+
+document.documentElement.dataset.theme = theme
+document.documentElement.lang = locale
+
+const TERMINAL_FONT = "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
+
+const lightTerminal: TerminalTheme = {
+  background: '#f1f2f3',
+  foreground: '#0f1114',
+  cursor: '#d3300d',
+  selectionBackground: 'rgba(211, 48, 13, 0.22)',
+  black: '#0f1114',
+  red: '#d3300d',
+  green: '#256d4a',
+  yellow: '#8a6100',
+  blue: '#1f4fa8',
+  magenta: '#8d3a86',
+  cyan: '#1c6b74',
+  white: '#5c626b',
+  brightBlack: '#8b9099',
+  brightRed: '#e8452a',
+  brightGreen: '#2f8759',
+  brightYellow: '#a97a12',
+  brightBlue: '#2a63c4',
+  brightMagenta: '#a3499b',
+  brightCyan: '#248591',
+  brightWhite: '#0f1114',
+}
+
+const darkTerminal: TerminalTheme = {
+  background: '#14171c',
+  foreground: '#e9eaec',
+  cursor: '#ff4f2b',
+  selectionBackground: 'rgba(255, 79, 43, 0.26)',
+  black: '#31363d',
+  red: '#ff4f2b',
+  green: '#5fd08a',
+  yellow: '#e7b75a',
+  blue: '#78a8ff',
+  magenta: '#cf9bf0',
+  cyan: '#63cbd6',
+  white: '#b9bfc7',
+  brightBlack: '#666d77',
+  brightRed: '#ff7658',
+  brightGreen: '#84e0a7',
+  brightYellow: '#f3cd83',
+  brightBlue: '#9cc0ff',
+  brightMagenta: '#dfb4fa',
+  brightCyan: '#8adfe8',
+  brightWhite: '#ffffff',
+}
+
+const terminalTheme = theme === 'dark' ? darkTerminal : lightTerminal
+
+const applyStrings = (text: PageStrings) => {
+  document.title = text.documentTitle
+  document
+    .querySelector('meta[name="description"]')
+    ?.setAttribute('content', text.documentDescription)
+
+  for (const node of document.querySelectorAll<HTMLElement>('[data-i18n]')) {
+    const key = node.dataset.i18n as keyof PageStrings
+    const value = text[key]
+    if (typeof value === 'string') node.textContent = value
+  }
+
+  const tryItems = document.querySelector('#try-items')
+  if (tryItems) {
+    tryItems.replaceChildren(
+      ...text.heroTryItems.map((item) => {
+        const code = document.createElement('code')
+        code.textContent = item
+        return code
+      }),
+    )
+  }
+
+  const whyGrid = document.querySelector('#why-grid')
+  if (whyGrid) {
+    whyGrid.replaceChildren(
+      ...text.whyItems.map((item, index) => {
+        const article = document.createElement('article')
+        article.className = 'why-item'
+        const idx = document.createElement('span')
+        idx.className = 'index'
+        idx.textContent = String(index + 1).padStart(2, '0')
+        const title = document.createElement('h3')
+        title.textContent = item.title
+        const body = document.createElement('p')
+        body.textContent = item.body
+        article.append(idx, title, body)
+        return article
+      }),
+    )
+  }
+
+  const packageList = document.querySelector('#package-list')
+  if (packageList) {
+    packageList.replaceChildren(
+      ...text.packages.map((pkg) => {
+        const li = document.createElement('li')
+        const link = document.createElement('a')
+        link.href = 'https://www.npmjs.com/package/docsterm'
+        const name = document.createElement('span')
+        name.className = 'pkg-name'
+        name.textContent = pkg.name
+        const body = document.createElement('span')
+        body.className = 'pkg-body'
+        body.textContent = pkg.body
+        link.append(name, body)
+        li.append(link)
+        return li
+      }),
+    )
+  }
+}
+
+applyStrings(strings)
 
 const setParam = (name: string, value: string) => {
   const next = new URLSearchParams(location.search)
@@ -32,31 +150,56 @@ const setParam = (name: string, value: string) => {
   location.search = next.toString()
 }
 
-const localeSelect = document.querySelector<HTMLSelectElement>('#locale-select')
-if (localeSelect) {
-  localeSelect.value = locale ?? 'en'
-  localeSelect.addEventListener('change', () => setParam('locale', localeSelect.value))
+for (const button of document.querySelectorAll<HTMLButtonElement>('[data-lang]')) {
+  const value = button.dataset.lang ?? 'en'
+  button.setAttribute('aria-pressed', String(value === locale))
+  button.addEventListener('click', () => setParam('locale', value))
 }
 
-const themeSelect = document.querySelector<HTMLSelectElement>('#theme-select')
-if (themeSelect) {
-  themeSelect.value = theme
-  themeSelect.addEventListener('change', () =>
-    setParam('theme', themeSelect.value === 'auto' ? '' : themeSelect.value),
-  )
+for (const button of document.querySelectorAll<HTMLButtonElement>('[data-theme-set]')) {
+  const value = button.dataset.themeSet ?? 'light'
+  button.setAttribute('aria-pressed', String(value === theme))
+  button.addEventListener('click', () => setParam('theme', value))
+}
+
+const copyButton = document.querySelector<HTMLButtonElement>('#copy-install')
+const installCode = document.querySelector<HTMLElement>('#install-code')
+if (copyButton && installCode) {
+  copyButton.addEventListener('click', () => {
+    void navigator.clipboard.writeText(installCode.textContent ?? '').then(() => {
+      copyButton.textContent = strings.heroCopied
+      copyButton.dataset.copied = 'true'
+      setTimeout(() => {
+        copyButton.textContent = strings.heroCopy
+        delete copyButton.dataset.copied
+      }, 1600)
+    })
+  })
 }
 
 const settings = document.querySelector<HTMLElement>('#ai-settings')
-if (settings) setupAiSettings(settings)
+if (settings) setupAiSettings(settings, strings)
 
 const makeAi = (): AIProvider | undefined => {
   if (params.get('ai') === 'mock') {
     return createMockAIProvider({
-      suggestions: {
-        deploy: { command: 'orbit deploy', explanation: 'Deploys the current app to the orbit cloud.' },
-        status: { command: 'orbit status', explanation: 'Shows the current deployment status.' },
-        init: { command: 'orbit init', explanation: 'Initializes an orbit project here.' },
-      },
+      suggestions:
+        locale === 'ru'
+          ? {
+              задепл: { command: 'orbit deploy', explanation: 'Деплоит текущее приложение в облако orbit.' },
+              статус: { command: 'orbit status', explanation: 'Показывает состояние деплоя.' },
+              инициал: { command: 'orbit init', explanation: 'Создаёт orbit-проект в этой папке.' },
+              deploy: { command: 'orbit deploy', explanation: 'Деплоит текущее приложение в облако orbit.' },
+            }
+          : {
+              deploy: { command: 'orbit deploy', explanation: 'Deploys the current app to the orbit cloud.' },
+              status: { command: 'orbit status', explanation: 'Shows the current deployment status.' },
+              init: { command: 'orbit init', explanation: 'Initializes an orbit project here.' },
+            },
+      explanation:
+        locale === 'ru'
+          ? 'Команда завершилась с ненулевым кодом. Проверь аргументы и попробуй ещё раз.'
+          : 'The command exited with a non-zero code. Check the arguments and try again.',
     })
   }
   if (keyStore.get(ANTHROPIC_KEY_NAME) !== null) return createAnthropicProvider()
@@ -83,22 +226,39 @@ if (mockSlot) {
       'orbit help': { output: 'commands: init, deploy, status, destroy [--force], help' },
     },
   })
-  void new DocsTerminal({ backend, ai: makeAi(), locale, theme }).mount(mockSlot)
+  void new DocsTerminal({
+    backend,
+    ai: makeAi(),
+    locale,
+    theme: terminalTheme,
+    fontFamily: TERMINAL_FONT,
+    fontSize: 13,
+  }).mount(mockSlot)
 }
 
 const bootButton = document.querySelector<HTMLButtonElement>('#python-boot')
 const pySlot = document.querySelector<HTMLElement>('#terminal-python')
+const pyFrame = document.querySelector<HTMLElement>('#python-frame')
 if (bootButton && pySlot) {
   bootButton.addEventListener('click', () => {
     bootButton.disabled = true
-    bootButton.textContent = 'Loading Python...'
+    bootButton.textContent = strings.pythonBooting
+    if (pyFrame) pyFrame.hidden = false
     const backend = createPyodideBackend()
-    void new DocsTerminal({ backend, ai: makeAi(), locale, theme })
+    void new DocsTerminal({
+      backend,
+      ai: makeAi(),
+      locale,
+      theme: terminalTheme,
+      fontFamily: TERMINAL_FONT,
+      fontSize: 13,
+    })
       .mount(pySlot)
       .then(() => bootButton.remove())
       .catch((error: unknown) => {
         bootButton.disabled = false
-        bootButton.textContent = 'Start Python environment'
+        bootButton.textContent = strings.pythonBoot
+        if (pyFrame) pyFrame.hidden = true
         pySlot.textContent = `failed to load pyodide: ${String(error)}`
       })
   })

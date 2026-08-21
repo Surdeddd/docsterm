@@ -7,7 +7,7 @@ An embeddable AI terminal for documentation. Drop a live console into any docs p
 **Live demo:** [docsterm.vercel.app](https://docsterm.vercel.app) (add `?ai=mock` for the offline AI flow) · **npm:** [docsterm](https://www.npmjs.com/package/docsterm)
 
 ```bash
-npm install docsterm docsterm-backend-mock @xterm/xterm
+npm install docsterm @xterm/xterm
 ```
 
 ## Why
@@ -18,15 +18,17 @@ npm install docsterm docsterm-backend-mock @xterm/xterm
 
 Everything runs client-side: Python via [Pyodide](https://pyodide.org), scripted tutorials via the mock backend, AI via the reader's own Anthropic API key (BYOK).
 
-## Packages
+## One package, five entry points
 
-| Package | What it is |
+Install `docsterm` once and import only the parts you use. Pyodide, the Anthropic SDK and React are **optional peer dependencies** — skip an entry point and its dependency never reaches your bundle or your `node_modules`.
+
+| Import | What it is |
 |---|---|
 | `docsterm` | The widget: xterm.js UI, line editor, session logic, i18n (en/ru), themes, page-context collector, mock AI provider |
-| `docsterm-backend-mock` | Scripted commands with zero compute — for tutorials and tests |
-| `docsterm-backend-pyodide` | Real Python 3 in the browser (Pyodide, loaded lazily from CDN) |
-| `docsterm-ai-anthropic` | AI provider on the official Anthropic SDK, browser mode, BYOK |
-| `docsterm-react` | `<DocsTerminal>` React component |
+| `docsterm/mock` | Scripted commands with zero compute — for tutorials and tests |
+| `docsterm/pyodide` | Real Python 3 in the browser (Pyodide, loaded lazily from CDN) |
+| `docsterm/anthropic` | AI provider on the official Anthropic SDK, browser mode, BYOK |
+| `docsterm/react` | `<DocsTerminal>` React component |
 
 ## Quick start
 
@@ -44,8 +46,8 @@ Vanilla:
 ```ts
 import '@xterm/xterm/css/xterm.css'
 import { DocsTerminal } from 'docsterm'
-import { createMockBackend } from 'docsterm-backend-mock'
-import { createAnthropicProvider } from 'docsterm-ai-anthropic'
+import { createMockBackend } from 'docsterm/mock'
+import { createAnthropicProvider } from 'docsterm/anthropic'
 
 const terminal = new DocsTerminal({
   backend: createMockBackend({
@@ -62,8 +64,8 @@ React:
 
 ```tsx
 import '@xterm/xterm/css/xterm.css'
-import { DocsTerminal } from 'docsterm-react'
-import { createPyodideBackend } from 'docsterm-backend-pyodide'
+import { DocsTerminal } from 'docsterm/react'
+import { createPyodideBackend } from 'docsterm/pyodide'
 
 export const PythonTutorial = () => (
   <DocsTerminal backend={createPyodideBackend()} theme="auto" />
@@ -82,7 +84,7 @@ Docusaurus, Vite and plain-HTML recipes: [docs/embedding.md](./docs/embedding.md
 
 ## AI and keys
 
-`docsterm-ai-anthropic` calls the Anthropic API directly from the browser (official SDK, `dangerouslyAllowBrowser`). The key is bring-your-own: stored in `localStorage` under `docsterm:anthropic-key`, never sent anywhere except `api.anthropic.com`. Suggestions use structured outputs (guaranteed JSON), explanations stream. Default model: `claude-opus-5` (configurable).
+`docsterm/anthropic` calls the Anthropic API directly from the browser (official SDK, `dangerouslyAllowBrowser`). The key is bring-your-own: stored in `localStorage` under `docsterm:anthropic-key`, never sent anywhere except `api.anthropic.com`. Suggestions use structured outputs (guaranteed JSON), explanations stream. Default model: `claude-opus-5` (configurable).
 
 For docs without AI, skip the `ai` option — the terminal works as a plain interactive tutorial. For offline demos and tests use `createMockAIProvider` from `docsterm`.
 
@@ -109,4 +111,4 @@ pnpm e2e         # Playwright against the built demo (incl. real Pyodide)
 
 ## License
 
-MIT
+MIT © [Surdeddd](https://github.com/Surdeddd)

@@ -19,8 +19,16 @@
 ## Сделано после v0.1 (2026-08-21, по «да» Максима)
 
 - [x] отдельный репо: https://github.com/Surdeddd/docsterm (public, main)
-- [x] npm publish 0.1.0: `docsterm`, `docsterm-react`, `docsterm-backend-mock`, `docsterm-backend-pyodide`, `docsterm-ai-anthropic` — unscoped (орг @docsterm через CLI не создаётся, браузер-расширение оффлайн; захочется скоуп — создать орг на npmjs.com и перепубликовать)
 - [x] демо задеплоено: https://docsterm.vercel.app (vercel, static prod; проверено headless-хромом — виджет исполняет команды)
+
+## v0.2.0 (2026-08-21, по замечаниям Максима)
+
+- [x] **один пакет вместо пяти**: `docsterm` + под-импорты `docsterm/mock`, `docsterm/pyodide`, `docsterm/anthropic`, `docsterm/react`. pyodide / @anthropic-ai/sdk / react — опциональные peer'ы (проверено чистой установкой: `npm i docsterm` тянет только @xterm). Старые 4 пакета помечены deprecated со ссылкой на новый.
+- [x] **редизайн демо**: типографский спек-лист (Instrument Serif + JetBrains Mono, печать «в две краски»), сетка с §-маркерами, зерно, staggered-анимации, светлая/тёмная тема
+- [x] **страница целиком двуязычная**: один переключатель меняет текст страницы, язык виджета, `<title>` и meta-description (а значит и контекст, который видит AI). Каталог `demo/src/i18n.ts`, без склеек языков
+- [x] подпись автора: футер «built by / сделал Surdeddd», `author` в package.json, MIT © Surdeddd в README
+- [x] **баг ядра пойман тестом**: бесконечный цикл ResizeObserver ↔ FitAddon (в чужих доках жёг бы CPU) — RO-колбэк теперь сравнивает предложенные размеры с текущими; плюс терминал не растягивается по содержимому
+- [x] опции виджета: `fontFamily`, `fontSize`, `theme` принимает объект темы
 
 ## Дальше (за пределами v0.1)
 

@@ -1,25 +1,25 @@
 import { keyStore } from 'docsterm'
-import { ANTHROPIC_KEY_NAME } from 'docsterm-ai-anthropic'
+import { ANTHROPIC_KEY_NAME } from 'docsterm/anthropic'
+import type { PageStrings } from './i18n'
 
-export function setupAiSettings(container: HTMLElement): void {
+export function setupAiSettings(container: HTMLElement, strings: PageStrings): void {
   const status = document.createElement('div')
   status.id = 'ai-status'
   const input = document.createElement('input')
   input.type = 'password'
-  input.placeholder = 'sk-ant-... (Anthropic API key)'
+  input.placeholder = strings.aiKeyPlaceholder
   input.id = 'ai-key-input'
+  input.autocomplete = 'off'
   const save = document.createElement('button')
-  save.textContent = 'Save key'
+  save.textContent = strings.aiSave
   save.id = 'ai-key-save'
   const clear = document.createElement('button')
-  clear.textContent = 'Clear key'
+  clear.textContent = strings.aiClear
   clear.id = 'ai-key-clear'
 
   const refresh = () => {
     const hasKey = keyStore.get(ANTHROPIC_KEY_NAME) !== null
-    status.textContent = hasKey
-      ? 'API key is set (stored only in this browser). Reload the page to apply.'
-      : 'No API key set - AI features are off unless ?ai=mock is used.'
+    status.textContent = hasKey ? strings.aiStatusSet : strings.aiStatusEmpty
   }
 
   save.addEventListener('click', () => {
