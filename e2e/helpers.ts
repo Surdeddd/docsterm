@@ -56,13 +56,30 @@ export async function readScreen(page: Page, slot: string): Promise<Screen> {
   return { rows: lines.map((line) => line.trimEnd()), cursor }
 }
 
+const restAfter = (row: string, needle: string): string | null => {
+  let matched = 0
+  for (let index = 0; index < row.length; index += 1) {
+    if (/\s/.test(row[index] ?? '')) continue
+    if (row[index] !== needle[matched]) return null
+    matched += 1
+    if (matched === needle.length) return row.slice(index + 1)
+  }
+  return null
+}
+
 export function outputAfter(screen: Screen, echo: string): string[] | null {
   const target = compact(echo)
   for (let start = screen.cursor - 1; start >= 0; start -= 1) {
     let joined = ''
     for (let end = start; end < screen.cursor; end += 1) {
-      joined += compact(screen.rows[end] ?? '')
+      const row = screen.rows[end] ?? ''
+      const before = joined
+      joined += compact(row)
       if (joined === target) return screen.rows.slice(end + 1, screen.cursor)
+      if (joined.startsWith(target)) {
+        const rest = restAfter(row, target.slice(before.length))
+        if (rest !== null) return [rest, ...screen.rows.slice(end + 1, screen.cursor)]
+      }
       if (!target.startsWith(joined)) break
     }
   }
