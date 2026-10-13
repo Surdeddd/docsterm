@@ -195,7 +195,8 @@ class Client {
     })
     socket.addEventListener('message', (event) => {
       const message = JSON.parse(String(event.data)) as ServerMessage
-      this.arrivals.push(message.id === undefined ? message.type : `${message.type} ${message.id}`)
+      const kind = message.id === undefined ? message.type : `${message.type} ${message.id}`
+      if (this.arrivals.at(-1) !== kind) this.arrivals.push(kind)
       const handler = message.id === undefined ? undefined : this.handlers.get(message.id)
       if (handler) handler(message)
       else if (message.id === undefined) this.general.push(message)
