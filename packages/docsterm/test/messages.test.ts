@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getMessages, resolveLocale } from '../src/messages.js'
+import { formatMessage, getMessages, resolveLocale } from '../src/messages.js'
 
 describe('resolveLocale', () => {
   it('maps russian language tags to ru', () => {
@@ -30,5 +30,25 @@ describe('getMessages', () => {
 
   it('keeps the two languages distinct', () => {
     expect(getMessages('en').welcome).not.toBe(getMessages('ru').welcome)
+  })
+
+  it('uses the same placeholders in both languages', () => {
+    const en = getMessages('en') as unknown as Record<string, string>
+    const ru = getMessages('ru') as unknown as Record<string, string>
+    const placeholders = (text: string) => (text.match(/\{\w+\}/g) ?? []).sort()
+    for (const key of Object.keys(en)) {
+      expect(placeholders(ru[key] ?? ''), key).toEqual(placeholders(en[key] ?? ''))
+    }
+  })
+})
+
+describe('formatMessage', () => {
+  it('fills known placeholders and keeps unknown ones', () => {
+    expect(formatMessage('{name}: command not found ({program})', { name: 'ls', program: 'greet' })).toBe(
+      'ls: command not found (greet)',
+    )
+    expect(formatMessage('timed out after {seconds} s', { seconds: 5 })).toBe('timed out after 5 s')
+    expect(formatMessage('{missing} stays', {})).toBe('{missing} stays')
+    expect(formatMessage('{toString}', {})).toBe('{toString}')
   })
 })

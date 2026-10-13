@@ -12,12 +12,13 @@ const raw = [
 
 describe('formatPythonError', () => {
   it('drops pyodide-internal frames but keeps user frames and the error', () => {
-    const formatted = formatPythonError(raw)
-    expect(formatted).toContain('Traceback (most recent call last):')
-    expect(formatted).toContain('File "<exec>", line 1, in <module>')
-    expect(formatted).toContain("NameError: name 'foo' is not defined")
-    expect(formatted).not.toContain('_base.py')
-    expect(formatted).not.toContain('await CodeRunner')
+    expect(formatPythonError(raw)).toBe(
+      [
+        'Traceback (most recent call last):',
+        '  File "<exec>", line 1, in <module>',
+        "NameError: name 'foo' is not defined",
+      ].join('\n'),
+    )
   })
 
   it('returns plain messages untouched', () => {

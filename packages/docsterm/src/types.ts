@@ -7,6 +7,7 @@ export interface BackendRunResult {
 
 export interface BackendHost {
   write(text: string): void
+  readonly locale?: Locale
 }
 
 export interface RunContext {
@@ -14,11 +15,14 @@ export interface RunContext {
   signal: AbortSignal
   columns: number
   rows: number
+  locale?: Locale
 }
 
 export interface InteractiveRun {
   onKey(data: string): void | Promise<void>
   done: Promise<BackendRunResult>
+  resize?(columns: number, rows: number): void
+  cancel?(): void
 }
 
 export type RunOutcome = BackendRunResult | InteractiveRun
@@ -37,9 +41,12 @@ export interface CompletionReply {
 export interface Backend {
   readonly id: string
   readonly prompt: string
+  readonly continuationPrompt?: string
   init(host: BackendHost): Promise<void>
   run(command: string, context?: RunContext): Promise<RunOutcome>
   complete?(request: CompletionRequest): CompletionReply | Promise<CompletionReply | null> | null
+  isComplete?(source: string): boolean | Promise<boolean>
+  describe?(): string
   dispose(): void
 }
 
@@ -71,8 +78,11 @@ export interface CommandSuggestion {
 export interface SuggestInput {
   request: string
   backendId: string
+  backendDescription?: string
   context: PageContext
   history: HistoryEntry[]
+  locale?: Locale
+  signal?: AbortSignal
 }
 
 export interface ExplainInput {
@@ -80,8 +90,11 @@ export interface ExplainInput {
   output: string
   exitCode: number
   backendId: string
+  backendDescription?: string
   context: PageContext
   history: HistoryEntry[]
+  locale?: Locale
+  signal?: AbortSignal
 }
 
 export interface AIProvider {
@@ -94,7 +107,10 @@ export interface TerminalTheme {
   background?: string
   foreground?: string
   cursor?: string
+  cursorAccent?: string
   selectionBackground?: string
+  selectionForeground?: string
+  selectionInactiveBackground?: string
   black?: string
   red?: string
   green?: string
@@ -113,13 +129,35 @@ export interface TerminalTheme {
   brightWhite?: string
 }
 
+export type ThemePreference = 'light' | 'dark' | 'auto' | TerminalTheme
+
+export type InputSource = 'typed' | 'paste' | 'api'
+
+export type CommandSource = InputSource | 'ai'
+
+export interface RunReport {
+  exitCode: number
+  output: string
+}
+
+export type DocsTerminalEvent =
+  | { type: 'ready' }
+  | { type: 'command'; command: string; source: CommandSource; exitCode: number; durationMs: number }
+  | { type: 'interrupt'; command?: string }
+  | { type: 'ai-suggest'; request: string; command?: string; accepted?: boolean }
+  | { type: 'ai-explain'; command: string }
+  | { type: 'error'; phase: 'init' | 'run' | 'ai'; message: string }
+
 export interface DocsTerminalOptions {
   backend: Backend
   ai?: AIProvider
   locale?: Locale
-  theme?: 'light' | 'dark' | 'auto' | TerminalTheme
+  theme?: ThemePreference
   fontFamily?: string
   fontSize?: number
   pageContext?: Partial<PageContext>
   welcome?: string
+  ariaLabel?: string
+  screenReaderMode?: boolean
+  onEvent?(event: DocsTerminalEvent): void
 }

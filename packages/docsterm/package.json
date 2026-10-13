@@ -1,6 +1,6 @@
 {
   "name": "docsterm",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "type": "module",
   "license": "MIT",
   "description": "Embeddable AI terminal for documentation: a live in-browser console with an AI command assistant",
@@ -29,7 +29,8 @@
   "homepage": "https://docsterm.vercel.app",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Surdeddd/docsterm.git"
+    "url": "git+https://github.com/Surdeddd/docsterm.git",
+    "directory": "packages/docsterm"
   },
   "bugs": {
     "url": "https://github.com/Surdeddd/docsterm/issues"
@@ -37,6 +38,16 @@
   "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "dist/index.d.ts": [
+        "./dist/index.d.ts"
+      ],
+      "*": [
+        "./dist/*/index.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -78,6 +89,10 @@
       "types": "./dist/react/index.d.ts",
       "default": "./dist/react/index.js"
     },
+    "./element": {
+      "types": "./dist/element/index.d.ts",
+      "default": "./dist/element/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -86,24 +101,24 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "node -e \"require('node:fs').rmSync('.dist-next',{recursive:true,force:true})\" && tsc -p tsconfig.build.json --outDir .dist-next && node -e \"const fs=require('node:fs');fs.rmSync('dist',{recursive:true,force:true});fs.renameSync('.dist-next','dist')\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepack": "pnpm run build && node ../../scripts/sync-readme.mjs"
   },
   "dependencies": {
-    "@xterm/addon-fit": "0.11.0",
-    "@xterm/xterm": "6.0.0"
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/addon-unicode11": "^0.9.0",
+    "@xterm/xterm": "^6.0.0",
+    "acorn": "^8.18.0"
   },
   "peerDependencies": {
-    "@anthropic-ai/sdk": ">=0.60.0",
-    "pyodide": ">=0.26.0",
+    "@anthropic-ai/sdk": ">=0.50.1",
     "react": ">=18"
   },
   "peerDependenciesMeta": {
     "@anthropic-ai/sdk": {
-      "optional": true
-    },
-    "pyodide": {
       "optional": true
     },
     "react": {
@@ -111,12 +126,13 @@
     }
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.118.0",
-    "@testing-library/react": "^16.3.0",
-    "@types/react": "^19.2.4",
-    "@types/react-dom": "^19.2.4",
-    "pyodide": "314.0.5",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "@anthropic-ai/sdk": "^0.131.0",
+    "@testing-library/react": "^16.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@xterm/headless": "^6.0.0",
+    "pyodide": "314.0.7",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   }
 }
