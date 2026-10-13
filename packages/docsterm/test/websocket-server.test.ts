@@ -811,7 +811,7 @@ describe('websocket reference server: limits', () => {
   it('counts the output limit in JSON-encoded bytes', async () => {
     const client = await connectReady(server.url)
     const notice = 'docsterm-server: output limit of 4 KB reached; the rest is discarded\r\n'
-    const zeros = await client.run(1, 'head -c 3000 /dev/zero')
+    const zeros = await client.run(1, 'cat /dev/zero')
     expect(zeros.output).toBe(`${'\u0000'.repeat(682)}\r\n${notice}`)
     expect(await client.run(2, 'echo next')).toMatchObject({ output: 'next\r\n', code: 0 })
   })

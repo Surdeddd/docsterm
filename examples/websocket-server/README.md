@@ -207,6 +207,7 @@ node-pty 1.1.0 can install its `spawn-helper` without the executable bit (`posix
 ## Known limitations
 
 - A Ctrl+C that arrives in the instant between a shell builtin and the start of the next program (`printf x; sleep 10`) reaches the shell instead of the program, and the shell waits for that program, as in any terminal. The reader presses Ctrl+C again, or the client sends `cancel`.
+- When the output limit, a timeout or a `cancel` interrupts a command at the very moment it finishes, the interrupt can land in the shell's own boundary call. The shell then loses the boundary and the server starts a fresh sandbox (variables and the working directory reset) and says so. The next command runs normally.
 - On macOS, the pty can emit `\r\r\n` instead of `\r\n` at internal buffer boundaries; terminals render both the same.
 - On Docker Desktop the daemon often runs without seccomp; the server warns about it but cannot fix it.
 - `set -x` makes the shell trace the internal `__dt_end` call into the output. Redefining or unsetting `__dt_end`, `__dt_n`, `__dt_a` or `__dt_b`, or printing `"$__dt_a$__dt_n"` on purpose, breaks the boundary; such a session ends in a timeout or a fresh sandbox.
