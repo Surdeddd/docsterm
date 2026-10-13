@@ -1,16 +1,21 @@
-import type { Backend, BackendHost, BackendRunResult, SimpleBackend } from '../types.js'
+import { formatMessage, getMessages, type Messages } from '../messages.js'
+import type { BackendHost, BackendRunResult, Locale, RunContext, SimpleBackend } from '../types.js'
+import type { WorkerLike } from '../worker-like.js'
+import { CommandLineError, isCompleteCommandLine, splitCommandLine } from './command-line.js'
+import { createWasiHost, type WasiExit, type WasiInstance } from './host.js'
+import {
+  createWorkerRunner,
+  WORKER_UNAVAILABLE,
+  type UnavailableReason,
+  type WorkerJob,
+  type WorkerRunner,
+} from './runner.js'
+import { WASI_WORKER_SOURCE } from './worker-source.js'
 
-const WASI_ESUCCESS = 0
-const WASI_EBADF = 8
-const WASI_ENOSYS = 52
-
-export interface WasiInstance {
-  exports: {
-    memory: WebAssembly.Memory
-    _start?: () => void
-    [name: string]: unknown
-  }
-}
+export { CommandLineError, isCompleteCommandLine, splitCommandLine, type CommandLineProblem } from './command-line.js'
+export { createWasiHost, type WasiExit, type WasiHost, type WasiHostOptions, type WasiInstance } from './host.js'
+export type { WorkerLike } from '../worker-like.js'
+export { WASI_WORKER_SOURCE } from './worker-source.js'
 
 export interface WasiBackendOptions {
   url?: string
@@ -21,232 +26,310 @@ export interface WasiBackendOptions {
   banner?: string
   prompt?: string
   stdin?: string
+  usage?: string
+  timeoutMs?: number
+  initTimeoutMs?: number
+  outputLimit?: number
+  worker?: boolean
+  createWorker?: (source: string) => WorkerLike
   instantiate?: (imports: WebAssembly.Imports) => Promise<WasiInstance>
 }
 
-export class ExitSignal extends Error {
-  constructor(readonly code: number) {
-    super(`exit ${code}`)
-    this.name = 'ExitSignal'
+const DEFAULT_TIMEOUT_MS = 30_000
+const DEFAULT_INIT_TIMEOUT_MS = 10_000
+const DEFAULT_OUTPUT_LIMIT = 1_048_576
+const MAX_TIMER_MS = 2_147_483_647
+const DESCRIPTION_LIMIT = 600
+const EXIT_INTERRUPTED = 130
+const WASM_MAGIC = [0x00, 0x61, 0x73, 0x6d]
+const WORKER_DIRECTIVE = 'worker-src blob:'
+
+const timeoutOf = (value: number | undefined, fallback: number): number | null => {
+  const ms = value ?? fallback
+  return Number.isFinite(ms) && ms > 0 ? Math.min(ms, MAX_TIMER_MS) : null
+}
+
+const bytesOf = (source: BufferSource): Uint8Array<ArrayBuffer> =>
+  ArrayBuffer.isView(source)
+    ? new Uint8Array(source.buffer, source.byteOffset, source.byteLength)
+    : new Uint8Array(source)
+
+const loadFailure = (error: unknown, source: string, messages: Messages): Error =>
+  error instanceof WebAssembly.CompileError
+    ? new Error(formatMessage(messages.wasiCompileFailed, { source, detail: error.message }), { cause: error })
+    : new Error(formatMessage(messages.wasiFetchNetworkError, { url: source }), { cause: error })
+
+const compileBytes = async (bytes: Uint8Array<ArrayBuffer>, source: string, messages: Messages) => {
+  if (!WASM_MAGIC.every((byte, index) => bytes[index] === byte)) {
+    throw new Error(formatMessage(messages.wasiNotModule, { source }))
+  }
+  try {
+    return await WebAssembly.compile(bytes)
+  } catch (error) {
+    throw error instanceof WebAssembly.CompileError ? loadFailure(error, source, messages) : error
   }
 }
 
-export function splitCommandLine(line: string): string[] {
-  const parts: string[] = []
-  let current = ''
-  let quote: string | null = null
-  for (const char of line.trim()) {
-    if (quote) {
-      if (char === quote) quote = null
-      else current += char
-      continue
-    }
-    if (char === '"' || char === "'") {
-      quote = char
-      continue
-    }
-    if (char === ' ') {
-      if (current !== '') parts.push(current)
-      current = ''
-      continue
-    }
-    current += char
+const download = async (url: string, messages: Messages): Promise<WebAssembly.Module> => {
+  let response: Response
+  try {
+    response = await fetch(url)
+  } catch (error) {
+    throw new Error(formatMessage(messages.wasiFetchNetworkError, { url }), { cause: error })
   }
-  if (current !== '') parts.push(current)
-  return parts
-}
-
-export function encodeStringList(values: string[]): { bytes: Uint8Array[]; totalSize: number } {
-  const encoder = new TextEncoder()
-  const bytes = values.map((value) => encoder.encode(`${value}\0`))
-  return { bytes, totalSize: bytes.reduce((sum, entry) => sum + entry.length, 0) }
-}
-
-export interface WasiHostState {
-  stdout: string
-  stderr: string
-  exitCode: number | null
-}
-
-export function createWasiImports(
-  state: WasiHostState,
-  options: { argv: string[]; env: Record<string, string>; stdin: string; getMemory: () => WebAssembly.Memory },
-): WebAssembly.Imports {
-  const decoder = new TextDecoder()
-  const encoder = new TextEncoder()
-  const envList = Object.entries(options.env).map(([key, value]) => `${key}=${value}`)
-  let stdinOffset = 0
-
-  const view = () => new DataView(options.getMemory().buffer)
-  const bytesOf = () => new Uint8Array(options.getMemory().buffer)
-
-  const writeList = (values: string[], pointersPtr: number, bufferPtr: number): number => {
-    const { bytes } = encodeStringList(values)
-    const memory = bytesOf()
-    const data = view()
-    let cursor = bufferPtr
-    bytes.forEach((entry, index) => {
-      data.setUint32(pointersPtr + index * 4, cursor, true)
-      memory.set(entry, cursor)
-      cursor += entry.length
+  if (!response.ok) throw new Error(formatMessage(messages.wasiFetchFailed, { url, status: response.status }))
+  const type = (response.headers.get('content-type') ?? '').split(';')[0]?.trim()
+  if (type === 'application/wasm' && typeof WebAssembly.compileStreaming === 'function') {
+    return WebAssembly.compileStreaming(response).catch((error: unknown) => {
+      throw loadFailure(error, url, messages)
     })
-    return WASI_ESUCCESS
   }
-
-  const sizes = (values: string[], countPtr: number, sizePtr: number): number => {
-    const { bytes, totalSize } = encodeStringList(values)
-    const data = view()
-    data.setUint32(countPtr, bytes.length, true)
-    data.setUint32(sizePtr, totalSize, true)
-    return WASI_ESUCCESS
+  let body: ArrayBuffer
+  try {
+    body = await response.arrayBuffer()
+  } catch (error) {
+    throw loadFailure(error, url, messages)
   }
-
-  const wasi = {
-    args_sizes_get: (countPtr: number, sizePtr: number) => sizes(options.argv, countPtr, sizePtr),
-    args_get: (pointersPtr: number, bufferPtr: number) =>
-      writeList(options.argv, pointersPtr, bufferPtr),
-    environ_sizes_get: (countPtr: number, sizePtr: number) => sizes(envList, countPtr, sizePtr),
-    environ_get: (pointersPtr: number, bufferPtr: number) =>
-      writeList(envList, pointersPtr, bufferPtr),
-
-    fd_write: (fd: number, iovsPtr: number, iovsLen: number, writtenPtr: number) => {
-      if (fd !== 1 && fd !== 2) return WASI_EBADF
-      const data = view()
-      const memory = bytesOf()
-      let written = 0
-      let text = ''
-      for (let index = 0; index < iovsLen; index += 1) {
-        const base = data.getUint32(iovsPtr + index * 8, true)
-        const length = data.getUint32(iovsPtr + index * 8 + 4, true)
-        text += decoder.decode(memory.subarray(base, base + length))
-        written += length
-      }
-      if (fd === 1) state.stdout += text
-      else state.stderr += text
-      data.setUint32(writtenPtr, written, true)
-      return WASI_ESUCCESS
-    },
-
-    fd_read: (fd: number, iovsPtr: number, iovsLen: number, readPtr: number) => {
-      if (fd !== 0) return WASI_EBADF
-      const data = view()
-      const memory = bytesOf()
-      const pending = encoder.encode(options.stdin.slice(stdinOffset))
-      let read = 0
-      for (let index = 0; index < iovsLen && read < pending.length; index += 1) {
-        const base = data.getUint32(iovsPtr + index * 8, true)
-        const length = data.getUint32(iovsPtr + index * 8 + 4, true)
-        const slice = pending.subarray(read, read + length)
-        memory.set(slice, base)
-        read += slice.length
-      }
-      stdinOffset += read
-      data.setUint32(readPtr, read, true)
-      return WASI_ESUCCESS
-    },
-
-    fd_close: () => WASI_ESUCCESS,
-    fd_seek: () => WASI_ENOSYS,
-    fd_fdstat_get: (_fd: number, statPtr: number) => {
-      const data = view()
-      data.setUint8(statPtr, 2)
-      data.setUint16(statPtr + 2, 0, true)
-      data.setBigUint64(statPtr + 8, 0n, true)
-      data.setBigUint64(statPtr + 16, 0n, true)
-      return WASI_ESUCCESS
-    },
-    fd_prestat_get: () => WASI_EBADF,
-    fd_prestat_dir_name: () => WASI_EBADF,
-    path_open: () => WASI_ENOSYS,
-    clock_time_get: (_id: number, _precision: bigint, timePtr: number) => {
-      view().setBigUint64(timePtr, BigInt(Date.now()) * 1_000_000n, true)
-      return WASI_ESUCCESS
-    },
-    random_get: (bufferPtr: number, length: number) => {
-      const memory = bytesOf().subarray(bufferPtr, bufferPtr + length)
-      crypto.getRandomValues(memory)
-      return WASI_ESUCCESS
-    },
-    poll_oneoff: () => WASI_ENOSYS,
-    sched_yield: () => WASI_ESUCCESS,
-    proc_exit: (code: number) => {
-      state.exitCode = code
-      throw new ExitSignal(code)
-    },
-  }
-
-  return { wasi_snapshot_preview1: wasi, wasi_unstable: wasi }
+  return compileBytes(new Uint8Array(body), url, messages)
 }
 
-export function buildWasiResult(state: WasiHostState, thrown?: unknown): BackendRunResult {
-  const parts = [state.stdout, state.stderr].filter((part) => part !== '')
-  if (thrown instanceof ExitSignal) {
-    return { output: parts.join('').replace(/\n$/, ''), exitCode: thrown.code }
+const isCommand = (module: WebAssembly.Module) => {
+  const exports = WebAssembly.Module.exports(module)
+  const has = (name: string, kind: string) => exports.some((entry) => entry.name === name && entry.kind === kind)
+  return has('_start', 'function') && has('memory', 'memory')
+}
+
+const isCommandInstance = (instance: WasiInstance) =>
+  typeof instance.exports._start === 'function' && instance.exports.memory instanceof WebAssembly.Memory
+
+const commandLineMessage = (error: CommandLineError, messages: Messages) =>
+  error.problem === 'quote' ? formatMessage(messages.wasiUnmatchedQuote, { quote: error.token }) : messages.noShellSyntax
+
+const secondsText = (milliseconds: number, locale: Locale) =>
+  new Intl.NumberFormat(locale, { maximumFractionDigits: 3, useGrouping: false }).format(milliseconds / 1000)
+
+type Reason = (locale: Locale) => string
+
+const noWorker: Reason = (locale) => getMessages(locale).wasiNoWorker
+
+const clipDescription = (text: string): string => {
+  if (text.length <= DESCRIPTION_LIMIT) return text
+  const kept = text.slice(0, DESCRIPTION_LIMIT - 1)
+  return `${/[\ud800-\udbff]$/.test(kept) ? kept.slice(0, -1) : kept}…`
+}
+
+interface OutputSink {
+  write(text: string): void
+  note(text: string): void
+  finish(exit: WasiExit, tail: string | undefined): BackendRunResult
+}
+
+const createSink = (context: RunContext | undefined): OutputSink => {
+  let buffered = ''
+  let lineOpen = false
+  const push = (text: string) => {
+    if (text === '') return
+    if (context) context.write(text)
+    else buffered += text
+    lineOpen = !text.endsWith('\n')
   }
-  if (thrown !== undefined) {
-    const message = thrown instanceof Error ? `${thrown.name}: ${thrown.message}` : String(thrown)
-    return { output: [...parts, message].join('').replace(/\n$/, ''), exitCode: 1 }
+  const onOwnLine = (text: string) => (lineOpen ? `\n${text}` : text)
+  return {
+    write: push,
+    note: (text) => push(`${onOwnLine(text)}\n`),
+    finish: (exit, tail) => {
+      const rest = tail === undefined ? '' : onOwnLine(tail)
+      if (context) return { output: rest, exitCode: exit.code }
+      return { output: `${buffered}${rest}`.replace(/\n$/, ''), exitCode: exit.code }
+    },
   }
-  return { output: parts.join('').replace(/\n$/, ''), exitCode: state.exitCode ?? 0 }
 }
 
 export function createWasiBackend(options: WasiBackendOptions): SimpleBackend {
   const program = options.program ?? 'main'
-  let moduleBytes: BufferSource | null = options.bytes ?? null
+  const timeoutMs = timeoutOf(options.timeoutMs, DEFAULT_TIMEOUT_MS)
+  const readyTimeoutMs = timeoutOf(options.initTimeoutMs, DEFAULT_INIT_TIMEOUT_MS)
+  const outputLimit = options.outputLimit ?? DEFAULT_OUTPUT_LIMIT
+  const stdin = new TextEncoder().encode(options.stdin ?? '')
+  const env = Object.entries(options.env ?? {}).map(([key, value]) => `${key}=${value}`)
+  let host: BackendHost | null = null
+  let compiled: WebAssembly.Module | null = null
+  let loading: Promise<WebAssembly.Module> | null = null
+  let runner: WorkerRunner | null = null
+  let releaseWorkerUrl = () => {}
+  const inline = options.worker === false || options.instantiate !== undefined
+  let ready = false
+  let broken: Reason | null = null
+  let generation = 0
+  let attempts = 0
+  let queue: Promise<unknown> = Promise.resolve()
+
+  const load = async (messages: Messages): Promise<WebAssembly.Module> => {
+    let module: WebAssembly.Module
+    if (options.bytes !== undefined) module = await compileBytes(bytesOf(options.bytes), 'options.bytes', messages)
+    else if (options.url !== undefined) module = await download(options.url, messages)
+    else throw new Error(messages.wasiNoModule)
+    if (!isCommand(module)) throw new Error(messages.wasiNotCommand)
+    return module
+  }
+
+  const workerFailure =
+    (cause: UnavailableReason, detail: string, custom: boolean): Reason =>
+    (locale) => {
+      const messages = getMessages(locale)
+      if (cause === 'stalled') {
+        return formatMessage(messages.wasiWorkerTimedOut, { seconds: secondsText(readyTimeoutMs ?? 0, locale) })
+      }
+      if (!custom) return formatMessage(messages.cspBlocked, { directive: WORKER_DIRECTIVE })
+      return detail === '' ? messages.wasiWorkerFailed : `${messages.wasiWorkerFailed}: ${detail}`
+    }
+
+  const startRunner = (module: WebAssembly.Module): WorkerRunner | null => {
+    const create = options.createWorker
+    const ticket = generation
+    const onUnavailable = (cause: UnavailableReason, detail: string) => {
+      if (ticket === generation) broken = workerFailure(cause, detail, create !== undefined)
+    }
+    if (create) return createWorkerRunner(module, () => create(WASI_WORKER_SOURCE), { readyTimeoutMs, onUnavailable })
+    if (typeof Worker !== 'function') {
+      broken = noWorker
+      return null
+    }
+    let url: string | null = null
+    releaseWorkerUrl = () => {
+      if (url !== null) URL.revokeObjectURL(url)
+      url = null
+    }
+    const spawnBlobWorker = (): WorkerLike => {
+      url ??= URL.createObjectURL(new Blob([WASI_WORKER_SOURCE], { type: 'text/javascript' }))
+      return new Worker(url)
+    }
+    return createWorkerRunner(module, spawnBlobWorker, { readyTimeoutMs, onUnavailable })
+  }
+
+  const stopRunner = () => {
+    runner?.dispose()
+    runner = null
+    releaseWorkerUrl()
+    releaseWorkerUrl = () => {}
+    broken = null
+  }
 
   const instantiate = async (imports: WebAssembly.Imports): Promise<WasiInstance> => {
     if (options.instantiate) return options.instantiate(imports)
-    if (!moduleBytes) throw new Error('wasm module is not loaded')
-    const result = await WebAssembly.instantiate(moduleBytes, imports)
-    return result.instance as unknown as WasiInstance
+    if (compiled === null) throw new Error('wasm module is not compiled')
+    return (await WebAssembly.instantiate(compiled, imports)) as unknown as WasiInstance
+  }
+
+  const runInline = async (job: WorkerJob, messages: Messages): Promise<WasiExit> => {
+    const wasi = createWasiHost({
+      ...job,
+      imports: compiled === null ? undefined : WebAssembly.Module.imports(compiled),
+      deadline: timeoutMs === null ? undefined : performance.now() + timeoutMs,
+    })
+    try {
+      const instance = await instantiate(wasi.imports)
+      if (!isCommandInstance(instance)) return { code: 1, error: messages.wasiNotCommand }
+      return wasi.run(instance)
+    } catch (error) {
+      return wasi.fail(error)
+    }
+  }
+
+  const tailOf = (exit: WasiExit, messages: Messages, locale: Locale) => {
+    if (exit.timedOut) return formatMessage(messages.timedOut, { seconds: secondsText(timeoutMs ?? 0, locale) })
+    if (exit.error === '') return messages.backendError
+    return exit.error
+  }
+
+  const execute = async (
+    argv: string[],
+    context: RunContext | undefined,
+    locale: Locale,
+    ticket: number,
+  ): Promise<BackendRunResult> => {
+    if (ticket !== generation || context?.signal.aborted) return { output: '', exitCode: EXIT_INTERRUPTED }
+    const messages = getMessages(locale)
+    const sink = createSink(context)
+    const job: WorkerJob = {
+      argv,
+      env,
+      stdin,
+      outputLimit,
+      write: sink.write,
+      truncated: () => sink.note(formatMessage(messages.wasiOutputLimit, { limit: outputLimit })),
+    }
+    let exit = runner === null ? WORKER_UNAVAILABLE : await runner.run(job, { signal: context?.signal, timeoutMs })
+    if (exit === WORKER_UNAVAILABLE) {
+      if (!inline) return { output: broken === null ? messages.notReady : broken(locale), exitCode: 1 }
+      exit = await runInline(job, messages)
+    }
+    return sink.finish(exit, tailOf(exit, messages, locale))
   }
 
   return {
     id: 'wasi',
     prompt: options.prompt ?? '$ ',
+    continuationPrompt: '> ',
 
-    async init(host: BackendHost): Promise<void> {
-      if (!moduleBytes && options.url) {
-        const response = await fetch(options.url)
-        if (!response.ok) throw new Error(`cannot fetch ${options.url}: ${response.status}`)
-        moduleBytes = await response.arrayBuffer()
+    async init(backendHost: BackendHost): Promise<void> {
+      host = backendHost
+      const ticket = generation
+      const attempt = (attempts += 1)
+      if (!options.instantiate && compiled === null) {
+        loading ??= load(getMessages(backendHost.locale ?? 'en')).finally(() => {
+          loading = null
+        })
+        const module = await loading
+        compiled ??= module
       }
-      if (options.banner) host.write(`${options.banner}\n`)
+      if (ticket !== generation || attempt !== attempts) return
+      if (broken !== null) stopRunner()
+      if (!inline && runner === null && compiled !== null) runner = startRunner(compiled)
+      ready = true
+      if (broken !== null) throw new Error(broken(backendHost.locale ?? 'en'))
+      if (options.banner) backendHost.write(`${options.banner}\n`)
     },
 
-    async run(command: string): Promise<BackendRunResult> {
-      const parts = splitCommandLine(command)
-      if (parts.length === 0) return { output: '', exitCode: 0 }
-      if (parts[0] !== program) {
-        return { output: `${parts[0]}: command not found (this terminal runs ${program})`, exitCode: 127 }
-      }
-
-      const state: WasiHostState = { stdout: '', stderr: '', exitCode: null }
-      let instance: WasiInstance | null = null
-      const imports = createWasiImports(state, {
-        argv: [program, ...(options.args ?? []), ...parts.slice(1)],
-        env: options.env ?? {},
-        stdin: options.stdin ?? '',
-        getMemory: () => {
-          const memory = instance?.exports.memory
-          if (!memory) throw new Error('wasm module exports no memory')
-          return memory
-        },
-      })
-
+    async run(command: string, context?: RunContext): Promise<BackendRunResult> {
+      const locale = context?.locale ?? host?.locale ?? 'en'
+      const messages = getMessages(locale)
+      if (broken !== null) return { output: broken(locale), exitCode: 1 }
+      if (!ready) return { output: messages.notReady, exitCode: 1 }
+      let words: string[]
       try {
-        instance = await instantiate(imports)
-        const start = instance.exports._start
-        if (typeof start !== 'function') throw new Error('wasm module exports no _start')
-        start()
-        return buildWasiResult(state)
+        words = splitCommandLine(command)
       } catch (error) {
-        return buildWasiResult(state, error)
+        if (!(error instanceof CommandLineError)) throw error
+        return { output: commandLineMessage(error, messages), exitCode: 2 }
       }
+      const [name, ...rest] = words
+      if (name === undefined) return { output: '', exitCode: 0 }
+      if (name !== program) {
+        return { output: formatMessage(messages.commandNotFoundIn, { name, program }), exitCode: 127 }
+      }
+      const ticket = generation
+      const argv = [program, ...(options.args ?? []), ...rest]
+      const task = queue.then(() => execute(argv, context, locale, ticket))
+      queue = task.catch(() => undefined)
+      return task
+    },
+
+    isComplete(source: string): boolean {
+      return isCompleteCommandLine(source)
+    },
+
+    describe(): string {
+      const messages = getMessages(host?.locale ?? 'en')
+      const summary = formatMessage(messages.wasiDescribe, { program })
+      if (options.usage === undefined) return clipDescription(summary)
+      return clipDescription(`${summary}\n${formatMessage(messages.wasiUsage, { usage: options.usage })}`)
     },
 
     dispose(): void {
-      moduleBytes = null
+      generation += 1
+      ready = false
+      stopRunner()
     },
   }
 }
