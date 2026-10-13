@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      ;(function () {
+        var root = document.documentElement
+        var params = new URLSearchParams(location.search)
+        var stored = function (key) {
+          try {
+            return localStorage.getItem(key)
+          } catch (error) {
+            return null
+          }
+        }
+        var lang = params.get('locale') || stored('docsterm-demo:locale') || navigator.language || 'en'
+        root.lang = lang.toLowerCase().indexOf('ru') === 0 ? 'ru' : 'en'
+        var theme = params.get('theme') || stored('docsterm-demo:theme')
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+        root.setAttribute('data-theme', theme)
+      })()
+    </script>
+    <title>docsterm - React StrictMode check</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/react-page.tsx"></script>
+  </body>
+</html>

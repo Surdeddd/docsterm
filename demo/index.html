@@ -3,102 +3,206 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="docsterm puts a live terminal inside your documentation." />
-    <title>docsterm - an embeddable AI terminal for documentation</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap"
-      rel="stylesheet"
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      ;(function () {
+        var root = document.documentElement
+        var params = new URLSearchParams(location.search)
+        var stored = function (key) {
+          try {
+            return localStorage.getItem(key)
+          } catch (error) {
+            return null
+          }
+        }
+        var lang = params.get('locale') || stored('docsterm-demo:locale') || navigator.language || 'en'
+        root.lang = lang.toLowerCase().indexOf('ru') === 0 ? 'ru' : 'en'
+        var theme = params.get('theme') || stored('docsterm-demo:theme')
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+        root.setAttribute('data-theme', theme)
+      })()
+    </script>
+    <meta
+      name="description"
+      content="docsterm puts a live terminal inside your documentation. Commands run in the reader browser, and an AI assistant turns plain language into the right command and explains failures."
     />
+    <title>docsterm - an embeddable AI terminal for documentation</title>
   </head>
   <body>
     <div class="grain" aria-hidden="true"></div>
 
     <header class="topbar">
-      <a class="brand" href="/">
+      <a class="brand" href="./" id="brand-link">
         <span class="brand-mark" aria-hidden="true"></span>
         <span class="brand-name">docsterm</span>
       </a>
       <div class="topbar-controls">
-        <div class="switch" role="group" data-switch="lang">
-          <span class="switch-label" data-i18n="langLabel"></span>
-          <button type="button" data-lang="en">EN</button>
-          <button type="button" data-lang="ru">RU</button>
+        <div class="switch" role="group" aria-labelledby="lang-label">
+          <span class="switch-label" id="lang-label" data-i18n="langLabel">lang</span>
+          <button type="button" data-lang="en" aria-pressed="false">EN</button>
+          <button type="button" data-lang="ru" aria-pressed="false">RU</button>
         </div>
-        <div class="switch" role="group" data-switch="theme">
-          <span class="switch-label" data-i18n="themeLabel"></span>
-          <button type="button" data-theme-set="light" data-i18n="themeLight"></button>
-          <button type="button" data-theme-set="dark" data-i18n="themeDark"></button>
+        <div class="switch" role="group" aria-labelledby="theme-label">
+          <span class="switch-label" id="theme-label" data-i18n="themeLabel">theme</span>
+          <button type="button" data-theme-set="light" data-i18n="themeLight" aria-pressed="false">light</button>
+          <button type="button" data-theme-set="dark" data-i18n="themeDark" aria-pressed="false">dark</button>
         </div>
         <nav class="topbar-links">
-          <a href="https://www.npmjs.com/package/docsterm" data-i18n="navNpm"></a>
-          <a href="https://github.com/Surdeddd/docsterm" data-i18n="navGithub"></a>
+          <a href="https://www.npmjs.com/package/docsterm" data-i18n="navNpm">npm</a>
+          <a href="https://github.com/Surdeddd/docsterm" data-i18n="navGithub">github</a>
         </nav>
       </div>
     </header>
 
     <main>
       <section class="hero">
-        <p class="eyebrow reveal" data-i18n="heroEyebrow"></p>
+        <p class="eyebrow reveal" id="hero-eyebrow">open source · MIT</p>
         <h1 class="display reveal">
-          <span data-i18n="heroTitleLead"></span>
-          <em data-i18n="heroTitleAccent"></em>
-          <span data-i18n="heroTitleTail"></span>
+          <span data-i18n="heroTitleLead">Documentation</span>
+          <em data-i18n="heroTitleAccent">your readers</em>
+          <span data-i18n="heroTitleTail">can run.</span>
         </h1>
         <div class="hero-body">
-          <p class="lead reveal" data-i18n="heroLead"></p>
+          <p class="lead reveal" data-i18n="heroLead">
+            docsterm drops a live console into any docs page. Commands execute in the reader browser - no servers, no
+            VMs. The AI layer turns a plain-language request into the right command, and explains the error when
+            something breaks.
+          </p>
           <div class="install reveal">
-            <span class="install-label" data-i18n="heroInstallLabel"></span>
+            <span class="install-label" data-i18n="heroInstallLabel">install</span>
             <code id="install-code">npm i docsterm @xterm/xterm</code>
-            <button type="button" id="copy-install" data-i18n="heroCopy"></button>
+            <button type="button" id="copy-install" data-i18n="heroCopy">copy</button>
+            <span class="install-note" id="copy-note" role="status" aria-live="polite"></span>
           </div>
         </div>
 
         <figure class="terminal-frame reveal">
           <figcaption class="terminal-label">
             <span class="dot" aria-hidden="true"></span>
-            <span data-i18n="terminalLabelMock"></span>
+            <span data-i18n="terminalLabelMock">shell - files, pipes, tab completion, less, Ctrl+C</span>
           </figcaption>
           <div id="terminal-mock" class="terminal-slot"></div>
           <div class="terminal-hint">
-            <span data-i18n="heroTryLabel"></span>
-            <span id="try-items"></span>
+            <span class="hint-label" data-i18n="heroTryLabel">try</span>
+            <span id="try-items" class="try-items"></span>
           </div>
         </figure>
       </section>
 
       <section class="band" id="why">
         <div class="band-head">
-          <span class="marker" data-i18n="whyNumber"></span>
-          <h2 data-i18n="whyTitle"></h2>
+          <span class="marker" data-i18n="whyNumber">01</span>
+          <h2 data-i18n="whyTitle">Why a terminal in the docs</h2>
         </div>
-        <div class="why-grid" id="why-grid"></div>
+        <div class="why-grid" id="why-grid">
+          <article class="why-item">
+            <span class="index">01</span>
+            <h3>Copy-paste loses readers</h3>
+            <p>
+              A reader leaves the page for their own shell, mistypes a flag, and never comes back to step four. Every
+              context switch is a drop-off you never see.
+            </p>
+          </article>
+          <article class="why-item">
+            <span class="index">02</span>
+            <h3>Hosted sandboxes are heavy</h3>
+            <p>
+              Killercoda, Instruqt and friends boot server VMs: thousands a month, an ops burden, and a separate platform
+              your docs have to link away to.
+            </p>
+          </article>
+          <article class="why-item">
+            <span class="index">03</span>
+            <h3>The page is the context</h3>
+            <p>
+              docsterm runs client-side and reads the page it sits on - title, description, headings. The assistant
+              already knows which tutorial the reader is in.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="band" id="run">
+        <div class="band-head">
+          <span class="marker" data-i18n="runNumber">02</span>
+          <h2 data-i18n="runTitle">Code blocks that run</h2>
+        </div>
+        <div class="band-body">
+          <p class="prose" data-i18n="runLead">
+            Mark a code block and docsterm adds a run button to it. Lines that start with $ are the commands;
+            everything else is shown output.
+          </p>
+          <ol class="run-steps">
+            <li class="run-step">
+              <h3 class="step-title" data-step="0">Create the project</h3>
+              <p class="step-body" data-step="0">Writes orbit.toml into the current folder.</p>
+              <pre class="code-sample" data-docsterm-run><code>$ orbit init
+Created orbit.toml
+Project initialized.</code></pre>
+            </li>
+            <li class="run-step">
+              <h3 class="step-title" data-step="1">Ship it</h3>
+              <p class="step-body" data-step="1">Uploads the bundle and prints the address.</p>
+              <pre class="code-sample" data-docsterm-run><code>$ orbit deploy
+Uploading bundle... done
+Deployed to https://demo.orbit.app</code></pre>
+            </li>
+            <li class="run-step">
+              <h3 class="step-title" data-step="2">Check on it</h3>
+              <p class="step-body" data-step="2">Shows the state of the deployment.</p>
+              <pre class="code-sample" data-docsterm-run><code>$ orbit status
+status: RUNNING
+region: eu-central
+version: 14</code></pre>
+            </li>
+          </ol>
+          <figure class="terminal-frame">
+            <figcaption class="terminal-label">
+              <span class="dot" aria-hidden="true"></span>
+              <span data-i18n="terminalLabelRun">shell - driven by the buttons above</span>
+            </figcaption>
+            <div id="terminal-run" class="terminal-slot"></div>
+            <div class="event-log">
+              <h3 id="event-log-title" data-i18n="eventsTitle">events from this terminal</h3>
+              <ol id="event-log" role="log" aria-labelledby="event-log-title"></ol>
+            </div>
+          </figure>
+        </div>
       </section>
 
       <section class="band" id="ai">
         <div class="band-head">
-          <span class="marker" data-i18n="aiNumber"></span>
-          <h2 data-i18n="aiTitle"></h2>
+          <span class="marker" data-i18n="aiNumber">03</span>
+          <h2 data-i18n="aiTitle">Any provider, your key</h2>
         </div>
         <div class="band-body">
-          <p class="prose" data-i18n="aiLead"></p>
+          <p class="prose" data-i18n="aiLead">
+            Pick Anthropic, any OpenAI-compatible endpoint, or a model running locally in Ollama or LM Studio. The key
+            lives in this browser localStorage and nowhere else.
+          </p>
+          <a class="text-link" id="ai-mock-link" href="?ai=mock" data-i18n="aiMockLink"
+            >or try the whole flow offline with the mock AI, no key at all</a
+          >
           <div id="ai-settings"></div>
         </div>
       </section>
 
-
       <section class="band" id="javascript">
         <div class="band-head">
-          <span class="marker" data-i18n="jsNumber"></span>
-          <h2 data-i18n="jsTitle"></h2>
+          <span class="marker" data-i18n="jsNumber">04</span>
+          <h2 data-i18n="jsTitle">JavaScript, instantly</h2>
         </div>
         <div class="band-body">
-          <p class="prose" data-i18n="jsLead"></p>
+          <p class="prose" data-i18n="jsLead">
+            The terminal below is a real JavaScript runtime in a Web Worker: persistent variables, async/await, console
+            output.
+          </p>
           <figure class="terminal-frame">
             <figcaption class="terminal-label">
               <span class="dot" aria-hidden="true"></span>
-              <span data-i18n="terminalLabelJs"></span>
+              <span data-i18n="terminalLabelJs">javascript - web worker, off the main thread</span>
             </figcaption>
             <div id="terminal-js" class="terminal-slot"></div>
             <div class="terminal-hint"><span data-i18n="jsTry"></span></div>
@@ -108,16 +212,20 @@
 
       <section class="band" id="python">
         <div class="band-head">
-          <span class="marker" data-i18n="pythonNumber"></span>
-          <h2 data-i18n="pythonTitle"></h2>
+          <span class="marker" data-i18n="pythonNumber">05</span>
+          <h2 data-i18n="pythonTitle">Real Python, client-side</h2>
         </div>
         <div class="band-body">
-          <p class="prose" data-i18n="pythonLead"></p>
-          <button type="button" id="python-boot" class="action" data-i18n="pythonBoot"></button>
+          <p class="prose" data-i18n="pythonLead">
+            The terminal below is a full CPython build compiled to WebAssembly (Pyodide), fetched lazily on first use.
+          </p>
+          <button type="button" id="python-boot" class="action" data-i18n="pythonBoot">
+            start the python environment
+          </button>
           <figure class="terminal-frame" id="python-frame" hidden>
             <figcaption class="terminal-label">
               <span class="dot" aria-hidden="true"></span>
-              <span data-i18n="terminalLabelPython"></span>
+              <span data-i18n="terminalLabelPython">python 3 - pyodide, in your browser</span>
             </figcaption>
             <div id="terminal-python" class="terminal-slot"></div>
             <div class="terminal-hint"><span data-i18n="pythonTry"></span></div>
@@ -125,18 +233,19 @@
         </div>
       </section>
 
-
       <section class="band" id="rust">
         <div class="band-head">
-          <span class="marker" data-i18n="rustNumber"></span>
-          <h2 data-i18n="rustTitle"></h2>
+          <span class="marker" data-i18n="rustNumber">06</span>
+          <h2 data-i18n="rustTitle">Rust, C, Go - anything that compiles</h2>
         </div>
         <div class="band-body">
-          <p class="prose" data-i18n="rustLead"></p>
+          <p class="prose" data-i18n="rustLead">
+            The binary below is a real Rust program compiled to wasm32-wasip1 and served as a 54 KB file.
+          </p>
           <figure class="terminal-frame">
             <figcaption class="terminal-label">
               <span class="dot" aria-hidden="true"></span>
-              <span data-i18n="terminalLabelRust"></span>
+              <span data-i18n="terminalLabelRust">rust - compiled to wasm32-wasip1</span>
             </figcaption>
             <div id="terminal-rust" class="terminal-slot"></div>
             <div class="terminal-hint"><span data-i18n="rustTry"></span></div>
@@ -144,75 +253,111 @@
         </div>
       </section>
 
-      <section class="band" id="embed">
+      <section class="band" id="element">
         <div class="band-head">
-          <span class="marker" data-i18n="embedNumber"></span>
-          <h2 data-i18n="embedTitle"></h2>
+          <span class="marker" data-i18n="elementNumber">07</span>
+          <h2 data-i18n="elementTitle">Any framework: one HTML tag</h2>
         </div>
         <div class="band-body">
-          <p class="prose" data-i18n="embedLead"></p>
+          <p class="prose" data-i18n="elementLead">
+            Vue, Svelte, Astro, VitePress or a plain HTML page: call defineDocsTerminal() once and write the tag.
+          </p>
+          <pre class="code-sample"><code>&lt;script type="module"&gt;
+  import { defineDocsTerminal } from 'docsterm/element'
+  defineDocsTerminal()
+&lt;/script&gt;
+
+&lt;docs-terminal backend="javascript"&gt;&lt;/docs-terminal&gt;</code></pre>
+          <figure class="terminal-frame">
+            <figcaption class="terminal-label">
+              <span class="dot" aria-hidden="true"></span>
+              <span data-i18n="terminalLabelElement">javascript - &lt;docs-terminal&gt; web component</span>
+            </figcaption>
+            <docs-terminal id="terminal-element" class="terminal-slot" backend="javascript" font-size="13"></docs-terminal>
+            <div class="terminal-hint"><span data-i18n="elementTry"></span></div>
+          </figure>
+        </div>
+      </section>
+
+      <section class="band" id="embed">
+        <div class="band-head">
+          <span class="marker" data-i18n="embedNumber">08</span>
+          <h2 data-i18n="embedTitle">Five minutes to embed</h2>
+        </div>
+        <div class="band-body">
+          <p class="prose" data-i18n="embedLead">
+            One React component, or a few lines of vanilla JS. Recipes for Docusaurus, Next.js, Vite and plain HTML are
+            in the embedding guide.
+          </p>
           <div class="code-grid">
             <article class="code-card">
-              <h3 data-i18n="embedReact"></h3>
+              <h3 data-i18n="embedReact">React (Docusaurus, Next, Vite)</h3>
               <pre><code>import '@xterm/xterm/css/xterm.css'
+import { useState } from 'react'
 import { DocsTerminal } from 'docsterm/react'
-import { createPyodideBackend } from 'docsterm/pyodide'
+import {
+  createPyodideBackend,
+} from 'docsterm/pyodide'
 
-export const Playground = () =&gt; (
-  &lt;DocsTerminal
-    backend={createPyodideBackend()}
-    theme="auto"
-  /&gt;
-)</code></pre>
+export function Playground() {
+  const [backend] = useState(
+    () =&gt; createPyodideBackend(),
+  )
+  return &lt;DocsTerminal backend={backend} /&gt;
+}</code></pre>
             </article>
             <article class="code-card">
-              <h3 data-i18n="embedVanilla"></h3>
+              <h3 data-i18n="embedVanilla">Vanilla</h3>
               <pre><code>import '@xterm/xterm/css/xterm.css'
-import { DocsTerminal } from 'docsterm'
-import { createMockBackend } from 'docsterm/mock'
+import {
+  DocsTerminal,
+  attachRunButtons,
+} from 'docsterm'
+import { createShellBackend } from 'docsterm/shell'
 
-const term = new DocsTerminal({
-  backend: createMockBackend({
-    script: {
-      'orbit init': { output: 'Project initialized.' },
-    },
-  }),
+const terminal = new DocsTerminal({
+  backend: createShellBackend(),
 })
-await term.mount(
+await terminal.mount(
   document.querySelector('#terminal'),
-)</code></pre>
+)
+attachRunButtons(document, terminal)</code></pre>
             </article>
           </div>
           <a
             class="action ghost"
+            id="embed-docs"
             href="https://github.com/Surdeddd/docsterm/blob/main/docs/embedding.md"
             data-i18n="embedDocs"
-          ></a>
+            >read the embedding guide</a
+          >
         </div>
       </section>
 
       <section class="band" id="packages">
         <div class="band-head">
-          <span class="marker" data-i18n="packagesNumber"></span>
-          <h2 data-i18n="packagesTitle"></h2>
+          <span class="marker" data-i18n="packagesNumber">09</span>
+          <h2 id="packages-title">One package, many entry points</h2>
         </div>
         <div class="band-body">
-          <p class="prose" data-i18n="packagesLead"></p>
+          <p class="prose" data-i18n="packagesLead">
+            Install docsterm once and import only what you use.
+          </p>
           <ul class="package-list" id="package-list"></ul>
         </div>
       </section>
     </main>
 
     <footer class="footer">
-      <p class="footer-tagline" data-i18n="footerTagline"></p>
+      <p class="footer-tagline" data-i18n="footerTagline">An embeddable AI terminal for documentation.</p>
       <p class="footer-meta">
         <span class="byline">
-          <span data-i18n="footerBy"></span>
+          <span data-i18n="footerBy">built by</span>
           <a href="https://github.com/Surdeddd">Surdeddd</a>
         </span>
         <a href="https://github.com/Surdeddd/docsterm">github</a>
         <a href="https://www.npmjs.com/package/docsterm">npm</a>
-        <span data-i18n="footerLicense"></span>
+        <span data-i18n="footerLicense">MIT · open source</span>
       </p>
     </footer>
 
