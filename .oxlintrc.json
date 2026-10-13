@@ -1,0 +1,7 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "rules": {
+    "no-control-regex": "off"
+  },
+  "ignorePatterns": ["**/dist/**", "**/node_modules/**", "e2e/screenshots/**"]
+}
