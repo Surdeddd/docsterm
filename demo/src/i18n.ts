@@ -267,7 +267,7 @@ const en: PageStrings = {
   packagesUnit: { one: 'entry point', other: 'entry points' },
   packagesLead:
     'Install docsterm once and import only what you use. The Anthropic SDK and React are optional peers, and Python loads from a CDN only when a reader starts it - skip an entry point and its dependency never lands in your bundle.',
-  packagesHref: 'https://github.com/Surdeddd/docsterm/blob/main/README.md',
+  packagesHref: 'https://github.com/Surdeddd/docsterm/blob/main/docs/reference.md',
   packageBodies: {
     docsterm: 'The widget: terminal UI, session logic, i18n, themes, page context, run buttons.',
     'docsterm/shell': 'A real shell: virtual filesystem, pipes, redirects, your own commands.',
@@ -437,7 +437,7 @@ const ru: PageStrings = {
   packagesUnit: { one: 'вход', few: 'входа', many: 'входов', other: 'входа' },
   packagesLead:
     'Ставится docsterm один раз, импортируется только то, что нужно. Anthropic SDK и React - опциональные peer-зависимости, а Python грузится с CDN, только когда читатель его запускает: не импортируешь вход - его зависимость не попадает в бандл.',
-  packagesHref: 'https://github.com/Surdeddd/docsterm/blob/main/README.ru.md',
+  packagesHref: 'https://github.com/Surdeddd/docsterm/blob/main/docs/reference.ru.md',
   packageBodies: {
     docsterm: 'Виджет: интерфейс терминала, логика сессии, i18n, темы, контекст страницы, кнопки запуска.',
     'docsterm/shell': 'Настоящая оболочка: виртуальная ФС, конвейеры, перенаправления, свои команды.',
