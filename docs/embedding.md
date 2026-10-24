@@ -1,6 +1,6 @@
 # Embedding docsterm
 
-Recipes for putting a terminal into a documentation site. The API itself is described in the [README](../README.md).
+Recipes for putting a terminal into a documentation site. The API itself is described in the [reference](./reference.md).
 
 Русская версия: [embedding.ru.md](./embedding.ru.md)
 
@@ -24,7 +24,7 @@ Recipes for putting a terminal into a documentation site. The API itself is desc
 - **Height.** Give the container (or the `<docs-terminal>` element) a height. The terminal fills it and refits when it resizes or when web fonts finish loading.
 - **One backend per terminal.** A backend object holds the session (files, variables, the Python runtime). Create it once per terminal and keep it; a new object means a new session. Backends can start again after `dispose()`, which is what React StrictMode and remounts need.
 - **Server-side rendering.** Every entry imports in Node without a DOM, so Docusaurus, Next.js, VitePress and Astro builds work. The terminal itself mounts only in the browser: the React component renders an empty `<div>` on the server, and `defineDocsTerminal()` does nothing in Node.
-- **Content-Security-Policy.** See the [table in the README](../README.md#content-security-policy); in short, xterm.js needs `style-src 'unsafe-inline'`, and the JavaScript, Python and WASI backends need workers and WebAssembly or eval.
+- **Content-Security-Policy.** See the [table in the reference](./reference.md#content-security-policy); in short, xterm.js needs `style-src 'unsafe-inline'`, and the JavaScript, Python and WASI backends need workers and WebAssembly or eval.
 
 ## Vanilla JavaScript and Vite
 
@@ -213,10 +213,10 @@ if (element) {
 | `theme` | `'light'`, `'dark'`, `'auto'` or a `TerminalTheme` object; wins over the attribute |
 | `ai` | An `AIProvider` |
 | `pageContext` | `Partial<PageContext>` for the AI |
-| `onEvent` | Called with every [event](../README.md#control-api) |
+| `onEvent` | Called with every [event](./reference.md#control-api) |
 | `terminal` | The mounted `DocsTerminal`, or `null` (read-only) |
 
-Methods: `run(text)`, `insert(text)`, `clear()` and `focus()`, as on [`DocsTerminal`](../README.md#control-api). `run()`, `insert()` and `clear()` called before a backend exists wait for it. Options without an attribute, such as `screenReaderMode`, go through `element.terminal.setOptions()` once `docsterm-ready` has fired.
+Methods: `run(text)`, `insert(text)`, `clear()` and `focus()`, as on [`DocsTerminal`](./reference.md#control-api). `run()`, `insert()` and `clear()` called before a backend exists wait for it. Options without an attribute, such as `screenReaderMode`, go through `element.terminal.setOptions()` once `docsterm-ready` has fired.
 
 Events: `docsterm-event` for every event, plus `docsterm-ready` and `docsterm-error`. They are `CustomEvent`s with the event as `detail`, bubble, and cross shadow roots. `docsterm-error` fires for the `init`, `run` and `ai` phases, so check `detail.phase === 'init'` for start-up failures. A wrong `backend` name or a websocket without `url` is reported as a `docsterm-error` with phase `init`, in the language of the `locale` attribute or else the browser.
 
@@ -447,7 +447,7 @@ export function forgetKeys() {
 }
 ```
 
-The demo's settings panel, `demo/src/ai-settings.ts`, is a complete example. Read [Keys, errors and answers](../README.md#keys-errors-and-answers) before you ship one: keys in `localStorage` are readable by every script on your origin.
+The demo's settings panel, `demo/src/ai-settings.ts`, is a complete example. Read [Keys, errors and answers](./reference.md#keys-errors-and-answers) before you ship one: keys in `localStorage` are readable by every script on your origin.
 
 ## Bundlers and tests
 

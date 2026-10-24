@@ -1,6 +1,6 @@
 # Встраивание docsterm
 
-Рецепты, как поставить терминал на сайт документации. Сам API описан в [README](../README.ru.md).
+Рецепты, как поставить терминал на сайт документации. Сам API описан в [справочнике](./reference.ru.md).
 
 English version: [embedding.md](./embedding.md)
 
@@ -24,7 +24,7 @@ English version: [embedding.md](./embedding.md)
 - **Высота.** Задайте высоту контейнеру (или элементу `<docs-terminal>`). Терминал заполняет его и подстраивается при изменении размера и после загрузки веб-шрифтов.
 - **Один бэкенд на терминал.** Объект бэкенда хранит сеанс (файлы, переменные, среду Python). Создайте его один раз на терминал и не пересоздавайте: новый объект — новый сеанс. После `dispose()` бэкенд можно запустить снова, это и нужно StrictMode в React и перемонтированию.
 - **Серверный рендеринг.** Любой вход импортируется в Node без DOM, поэтому сборки Docusaurus, Next.js, VitePress и Astro работают. Сам терминал монтируется только в браузере: React-компонент рисует на сервере пустой `<div>`, а `defineDocsTerminal()` в Node ничего не делает.
-- **Content-Security-Policy.** См. [таблицу в README](../README.ru.md#content-security-policy); коротко: xterm.js нужен `style-src 'unsafe-inline'`, а бэкендам JavaScript, Python и WASI — воркеры и WebAssembly или eval.
+- **Content-Security-Policy.** См. [таблицу в справочнике](./reference.ru.md#content-security-policy); коротко: xterm.js нужен `style-src 'unsafe-inline'`, а бэкендам JavaScript, Python и WASI — воркеры и WebAssembly или eval.
 
 ## Чистый JavaScript и Vite
 
@@ -213,10 +213,10 @@ if (element) {
 | `theme` | `'light'`, `'dark'`, `'auto'` или объект `TerminalTheme`; важнее атрибута |
 | `ai` | `AIProvider` |
 | `pageContext` | `Partial<PageContext>` для AI |
-| `onEvent` | Вызывается для каждого [события](../README.ru.md#управляющий-api) |
+| `onEvent` | Вызывается для каждого [события](./reference.ru.md#управляющий-api) |
 | `terminal` | Смонтированный `DocsTerminal` или `null` (только чтение) |
 
-Методы: `run(text)`, `insert(text)`, `clear()` и `focus()`, как у [`DocsTerminal`](../README.ru.md#управляющий-api). `run()`, `insert()` и `clear()`, вызванные до появления бэкенда, ждут его. Опции без атрибута, например `screenReaderMode`, задаются через `element.terminal.setOptions()` после события `docsterm-ready`.
+Методы: `run(text)`, `insert(text)`, `clear()` и `focus()`, как у [`DocsTerminal`](./reference.ru.md#управляющий-api). `run()`, `insert()` и `clear()`, вызванные до появления бэкенда, ждут его. Опции без атрибута, например `screenReaderMode`, задаются через `element.terminal.setOptions()` после события `docsterm-ready`.
 
 События: `docsterm-event` для каждого события, а также `docsterm-ready` и `docsterm-error`. Это `CustomEvent` с событием в `detail`; они всплывают и проходят сквозь теневые корни. `docsterm-error` приходит для фаз `init`, `run` и `ai`, так что сбои запуска отбирайте по `detail.phase === 'init'`. Неверное имя в `backend` или websocket без `url` приходят как `docsterm-error` с фазой `init` на языке атрибута `locale`, а без него — на языке браузера.
 
@@ -447,7 +447,7 @@ export function forgetKeys() {
 }
 ```
 
-Панель настроек демо, `demo/src/ai-settings.ts`, — полный пример. Прежде чем выпускать свою, прочтите раздел [Ключи, ошибки и ответы](../README.ru.md#ключи-ошибки-и-ответы): ключи в `localStorage` доступны любому скрипту с вашего источника.
+Панель настроек демо, `demo/src/ai-settings.ts`, — полный пример. Прежде чем выпускать свою, прочтите раздел [Ключи, ошибки и ответы](./reference.ru.md#ключи-ошибки-и-ответы): ключи в `localStorage` доступны любому скрипту с вашего источника.
 
 ## Сборщики и тесты
 
