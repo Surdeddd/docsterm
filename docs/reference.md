@@ -4,6 +4,20 @@
 
 Everything beyond installing and a first terminal: backends, the AI layer, the control API and the widget options.
 
+## Contents
+
+- [Backends](#backends)
+- [The terminal](#the-terminal)
+- [AI providers](#ai-providers)
+- [Control API](#control-api)
+- [Run buttons](#run-buttons)
+- [React](#react)
+- [The `<docs-terminal>` element](#the-docs-terminal-element)
+- [Widget options](#widget-options)
+- [Writing a backend](#writing-a-backend)
+- [Content-Security-Policy](#content-security-policy)
+- [Languages and themes](#languages-and-themes)
+
 ## Backends
 
 A backend turns a command line into output and an exit code. Six ship with the package; [Writing a backend](#writing-a-backend) describes the contract for your own.

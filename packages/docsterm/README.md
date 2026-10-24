@@ -18,6 +18,8 @@ An embeddable terminal for documentation pages, built on xterm.js 6. Readers run
 - [Reference](#reference)
 - [Security and limits](#security-and-limits)
 - [Development](#development)
+- [Roadmap](#roadmap)
+- [License](#license)
 
 ## Install
 
