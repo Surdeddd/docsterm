@@ -56,7 +56,7 @@ test.describe('page copy and languages', () => {
     await expect(page.locator('#hero-eyebrow')).toHaveText(`открытый код · MIT · v${manifest.version}`)
     await expect(page.locator('#packages-title')).toHaveText(`Один пакет, ${ENTRIES.length} входов`)
     await expect(page.locator('#embed-docs')).toHaveAttribute('href', /docs\/embedding\.ru\.md$/)
-    await expect(page.locator('#package-list a').first()).toHaveAttribute('href', /README\.ru\.md$/)
+    await expect(page.locator('#package-list a').first()).toHaveAttribute('href', /docs\/reference\.ru\.md$/)
     await expect(page.locator('#ai-provider option[value="ollama"]')).toHaveText('Ollama (локально)')
     await expect(page.locator('#ai-status')).toHaveText('выключено: в этом браузере ещё ничего не настроено.')
     await expect(page.locator('#event-log')).toContainText('терминал готов')
